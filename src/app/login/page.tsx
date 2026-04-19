@@ -6,8 +6,6 @@ import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type Provider = 'google' | 'yandex' | 'vk';
-
 function GoogleIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -18,45 +16,6 @@ function GoogleIcon() {
     </svg>
   );
 }
-
-function YandexIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="12" fill="#FC3F1D"/>
-      <path d="M13.32 18H11.2V9.08H10c-1.56 0-2.38.78-2.38 1.96 0 1.34.57 1.96 1.76 2.78l1.08.74L8.26 18H6l1.94-2.96C6.56 14.08 5.7 12.98 5.7 11.04c0-2.28 1.58-3.78 4.28-3.78h3.34V18z" fill="white"/>
-    </svg>
-  );
-}
-
-function VKIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-      <rect width="24" height="24" rx="6" fill="#0077FF"/>
-      <path d="M12.87 16.5c-4.96 0-7.79-3.4-7.9-9.06h2.48c.07 4.16 1.92 5.92 3.37 6.28V7.44h2.33v3.36c1.44-.15 2.95-1.8 3.46-3.36h2.33c-.38 2.17-2 3.82-3.15 4.49 1.15.54 2.97 2 3.68 4.57H17c-.56-1.73-1.95-3.07-3.8-3.24v3.24h-.33z" fill="white"/>
-    </svg>
-  );
-}
-
-const PROVIDERS: { id: Provider; label: string; icon: React.ReactNode; className: string }[] = [
-  {
-    id: 'google',
-    label: 'Войти через Google',
-    icon: <GoogleIcon />,
-    className: 'bg-white text-black hover:bg-gray-100',
-  },
-  {
-    id: 'yandex',
-    label: 'Войти через Яндекс',
-    icon: <YandexIcon />,
-    className: 'bg-[#FC3F1D] text-white hover:bg-[#e0361a]',
-  },
-  {
-    id: 'vk',
-    label: 'Войти через ВКонтакте',
-    icon: <VKIcon />,
-    className: 'bg-[#0077FF] text-white hover:bg-[#0066dd]',
-  },
-];
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<'social' | 'email'>('social');
@@ -70,10 +29,10 @@ export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const handleSocialLogin = async (provider: Provider) => {
+  const handleGoogleLogin = async () => {
     setError(null);
     await supabase.auth.signInWithOAuth({
-      provider,
+      provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   };
@@ -162,16 +121,13 @@ export default function LoginPage() {
 
             {activeTab === 'social' ? (
               <div className="space-y-3">
-                {PROVIDERS.map(({ id, label, icon, className }) => (
-                  <button
-                    key={id}
-                    onClick={() => handleSocialLogin(id)}
-                    className={`w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-2xl font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98] ${className}`}
-                  >
-                    {icon}
-                    {label}
-                  </button>
-                ))}
+                <button
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-100 py-3.5 px-6 rounded-2xl font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <GoogleIcon />
+                  Войти через Google
+                </button>
               </div>
             ) : (
               <form onSubmit={handleEmailAuth} className="space-y-4">
