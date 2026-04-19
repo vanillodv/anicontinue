@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutDashboard, Users, ShieldAlert, Cpu, BarChart2, Lightbulb, BookImage, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldAlert, Cpu, BarChart2, Lightbulb, BookImage, Settings, Gift } from 'lucide-react';
 import { requireAdminPage } from '@/lib/admin/guard';
 
 const NAV = [
@@ -9,6 +9,7 @@ const NAV = [
   { href: '/admin/anime',        label: 'Каталог',    icon: BookImage },
   { href: '/admin/ai',           label: 'AI промпты', icon: Cpu },
   { href: '/admin/analytics',    label: 'Аналитика',  icon: BarChart2 },
+  { href: '/admin/grants',       label: 'Начисления', icon: Gift },
   { href: '/admin/suggestions',  label: 'Пожелания',  icon: Lightbulb },
   { href: '/admin/settings',     label: 'Настройки',  icon: Settings },
 ];

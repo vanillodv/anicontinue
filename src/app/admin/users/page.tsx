@@ -20,6 +20,7 @@ export default function AdminUsersPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [addAmount, setAddAmount] = useState("10");
+  const [addNote, setAddNote] = useState("");
 
   useEffect(() => {
     fetch('/api/admin/users')
@@ -50,10 +51,20 @@ export default function AdminUsersPage() {
   const addGenerations = async (user: UserRow) => {
     const n = parseInt(addAmount, 10);
     if (!n || n <= 0) return;
-    const newLimit = user.chapters_limit + n;
-    await patch(user.id, { chapters_limit: newLimit });
+    setPending(user.id);
+    const res = await fetch(`/api/admin/users/${user.id}/grant`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: n, note: addNote }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, chapters_limit: data.new_limit } : u));
+    }
+    setPending(null);
     setAddingFor(null);
     setAddAmount("10");
+    setAddNote("");
   };
 
   return (
@@ -110,6 +121,14 @@ export default function AdminUsersPage() {
                             onChange={e => setAddAmount(e.target.value)}
                             className="w-14 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-xs text-center"
                             autoFocus
+                            onKeyDown={e => { if (e.key === 'Enter') addGenerations(u); if (e.key === 'Escape') setAddingFor(null); }}
+                          />
+                          <input
+                            type="text"
+                            value={addNote}
+                            onChange={e => setAddNote(e.target.value)}
+                            placeholder="Причина..."
+                            className="w-24 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-xs"
                             onKeyDown={e => { if (e.key === 'Enter') addGenerations(u); if (e.key === 'Escape') setAddingFor(null); }}
                           />
                           <button

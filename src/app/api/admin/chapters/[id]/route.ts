@@ -1,8 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
-import { requireAdmin } from '@/lib/admin/guard';
+import { requireAdmin, serviceClient } from '@/lib/admin/guard';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface Params { params: Promise<{ id: string }> }
+
+// Получить одну главу с контентом
+export async function GET(_req: NextRequest, { params }: Params) {
+  const denied = await requireAdmin();
+  if (denied) return NextResponse.json(denied, { status: 403 });
+
+  const { id } = await params;
+  const { data, error } = await serviceClient()
+    .from('chapters')
+    .select('id, title, content, created_at, is_public, anime(title_ru), profiles!chapters_user_id_fkey(username)')
+    .eq('id', id)
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}
 
 // Soft-delete / restore
 export async function PATCH(req: NextRequest, { params }: Params) {
