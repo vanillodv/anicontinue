@@ -3,6 +3,28 @@ import { createClient } from '@/lib/supabase/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateSchema, sanitizeInput } from '@/lib/validate';
 import { buildPrompt } from '@/lib/prompts/master';
+import { createClient as createSvcClient } from '@supabase/supabase-js';
+
+// Логируем ошибку генерации (не бросает исключений)
+async function logGenError(
+  userId: string | null,
+  animeId: number | null,
+  errorType: string,
+  message: string
+) {
+  try {
+    const svc = createSvcClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    await svc.from('generation_errors').insert({
+      user_id: userId,
+      anime_id: animeId,
+      error_type: errorType,
+      error_message: String(message).slice(0, 500),
+    });
+  } catch { /* silent */ }
+}
 
 export const maxDuration = 10;
 export const runtime = 'edge';
@@ -207,6 +229,12 @@ export async function POST(req: Request) {
           console.log('--- END GENERATION REQUEST ---');
         } catch (err: any) {
           console.error('STREAM ERROR:', err);
+          await logGenError(
+            user?.id ?? null,
+            params.animeId,
+            err?.message?.toLowerCase().includes('timeout') ? 'timeout' : 'stream_error',
+            err?.message ?? String(err)
+          );
           controller.error(err);
         }
       }
@@ -222,6 +250,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('TOP-LEVEL ERROR:', error);
+    await logGenError(null, null, 'ai_error', error?.message ?? String(error));
     return NextResponse.json(
       { error: 'GENERATION_FAILED', message: error.message },
       { status: 500 }

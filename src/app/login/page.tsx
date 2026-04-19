@@ -38,6 +38,12 @@ export default function LoginPage() {
         if (password !== confirmPassword) {
           throw new Error("Пароли не совпадают");
         }
+        // Проверяем разрешена ли регистрация
+        const settingsRes = await fetch('/api/settings/public');
+        const settings = await settingsRes.json();
+        if (!settings.registration_enabled) {
+          throw new Error("Регистрация временно приостановлена. Попробуйте позже.");
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
