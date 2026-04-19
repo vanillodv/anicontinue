@@ -5,7 +5,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const origin = requestUrl.origin
+
+  // Use the actual host the browser connected to (works for LAN IP access too)
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || requestUrl.host;
+  const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'http');
+  const origin = `${proto}://${host}`;
 
   if (code) {
     const cookieStore = await cookies()

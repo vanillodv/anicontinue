@@ -120,7 +120,7 @@ export const batch2: Partial<Anime>[] = [
     title_jp: "Fairy Tail",
     synopsis: "Маги гильдии Хвост Феи отправляются на самые безумные задания. Это история о дружбе, магии и сражениях с темными гильдиями.",
     genres: ["Action", "Adventure", "Fantasy"],
-    poster_url: "https://cdn.myanimelist.net/images/anime/5/18171.jpg",
+    poster_url: "https://cdn.myanimelist.net/images/anime/5/18179.jpg",
     score: 7.6,
     year: 2009,
     studio: "A-1 Pictures",

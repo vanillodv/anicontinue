@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import AnimeDetailsClient from "./AnimeDetailsClient";
+import AnimeChaptersFeed from "./AnimeChaptersFeed";
 
 export const revalidate = 3600;
 
@@ -35,10 +36,13 @@ export default async function AnimePage({ params }: AnimePageProps) {
 
   return (
     <main className="min-h-screen bg-[#0D0D1A] pt-16">
-      <AnimeDetailsClient 
-        anime={anime} 
-        lastChapter={lastChapter} 
+      <AnimeDetailsClient
+        anime={anime}
+        lastChapter={lastChapter}
       />
+      <div className="container mx-auto px-6 pb-20 max-w-7xl">
+        <AnimeChaptersFeed animeId={Number(id)} animeName={anime.title_ru || anime.title_en || ""} />
+      </div>
     </main>
   );
 }

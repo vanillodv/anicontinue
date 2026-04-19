@@ -20,6 +20,11 @@ export interface Anime {
   created_at: string;
 }
 
+export interface JikanResponse {
+  data: any[];
+  pagination?: any;
+}
+
 export interface Profile {
   id: string;
   username: string | null;
@@ -46,6 +51,9 @@ export interface Chapter {
   scene_params: SceneParams;
   character_id: string | null;
   is_public: boolean;
+  likes_count: number;
+  summary: string | null;
+  is_deleted: boolean;
   created_at: string;
 }
 

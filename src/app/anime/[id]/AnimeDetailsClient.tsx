@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Star, Calendar, Building2, Layers, Sparkles, RotateCcw, ArrowRight } from "lucide-react";
+import { translateGenre } from "@/lib/genres";
 import { Anime } from "@/types";
 import SceneConstructor from "@/components/reader/SceneConstructor";
+import { proxyImage } from "@/lib/proxyImage";
 
 interface AnimeDetailsClientProps {
   anime: Anime;
@@ -26,9 +28,19 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
         <div className="w-full lg:w-1/3 shrink-0">
           <div className="relative aspect-[2/3] w-full rounded-3xl overflow-hidden shadow-2xl border border-white/5">
             {anime.poster_url && (
-              <Image src={anime.poster_url} alt={anime.title_ru || ""} fill className="object-cover" priority />
+              <Image
+                src={proxyImage(anime.poster_url)!}
+                alt={anime.title_ru || ""}
+                fill
+                className="object-cover"
+                priority
+              />
             )}
           </div>
+          <p className="mt-2 text-center text-[10px] text-gray-700 leading-relaxed px-1">
+            {anime.studio ? `© ${anime.studio}. ` : ""}Изображение предоставлено MyAnimeList.
+            Все права на аниме принадлежат их правообладателям.
+          </p>
         </div>
 
         <div className="flex flex-col gap-8">
@@ -36,7 +48,7 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
             <h1 className="text-4xl md:text-6xl font-bold text-white">{anime.title_ru || anime.title_en}</h1>
             <div className="flex flex-wrap gap-2">
               {Array.isArray(anime.genres) && anime.genres.map((genre: string) => (
-                <span key={genre} className="px-3 py-1 bg-[#E8409A]/10 text-[#E8409A] rounded-full text-sm font-medium border border-[#E8409A]/20">{genre}</span>
+                <span key={genre} className="px-3 py-1 bg-[#E8409A]/10 text-[#E8409A] rounded-full text-sm font-medium border border-[#E8409A]/20">{translateGenre(genre)}</span>
               ))}
             </div>
           </div>
@@ -93,14 +105,13 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
         </div>
       </div>
 
-      <SceneConstructor 
-        animeId={anime.id} 
-        animeTitle={anime.title_ru || ""} 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        continuePrevious={continuePrevious}
-        lastChapterTitle={lastChapter?.title}
-        officialEndingContext={anime.ending_context}
+      <SceneConstructor
+        animeId={anime.id}
+        animeName={anime.title_ru || ""}
+        endingContext={anime.ending_context || ""}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        initialContinuePrevious={continuePrevious}
       />
     </div>
   );

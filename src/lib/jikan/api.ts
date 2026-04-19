@@ -33,6 +33,7 @@ function mapJikanToAnime(data: any): Anime {
     episodes: data.episodes,
     status: data.status,
     prompt_template: null,
+    ending_context: null,
     cached_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
   };

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import CookieBanner from "@/components/layout/CookieBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +16,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AniContinue — Продолжи своё любимое аниме с помощью AI",
+  title: { default: "AniContinue", template: "%s | AniContinue" },
   description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
+  keywords: ["аниме", "фанфик", "AI", "продолжение аниме", "AniContinue"],
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: "AniContinue",
+    title: "AniContinue — Продолжи своё любимое аниме с AI",
+    description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({
@@ -33,6 +44,8 @@ export default function RootLayout({
         <main className="flex-grow">
           {children}
         </main>
+        <Footer />
+        <CookieBanner />
       </body>
     </html>
   );
