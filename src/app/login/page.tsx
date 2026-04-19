@@ -188,7 +188,7 @@ export default function LoginPage() {
 
             <div className="pt-6 border-t border-white/5 text-center">
               <p className="text-xs text-[#E8409A] font-medium bg-[#E8409A]/5 py-3 rounded-xl inline-block px-6">
-                ✨ 3 главы бесплатно каждый месяц
+                ✨ 3 главы бесплатно для каждого
               </p>
             </div>
           </div>
