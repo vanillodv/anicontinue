@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
+import { serviceClient } from '@/lib/admin/guard';
 import { TrendingUp, Users, BookOpen, DollarSign } from 'lucide-react';
 
 async function getData() {
-  const supabase = await createClient();
+  const supabase = serviceClient();
 
   const since14 = new Date(Date.now() - 14 * 24 * 3600_000).toISOString();
   const since1h = new Date(Date.now() - 3_600_000).toISOString();

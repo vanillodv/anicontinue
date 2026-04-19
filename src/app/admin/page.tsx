@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { serviceClient } from '@/lib/admin/guard';
 import { Users, BookOpen, DollarSign, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 async function getMetrics() {
-  const supabase = await createClient();
+  const supabase = serviceClient();
 
   const [
     { count: totalUsers },
