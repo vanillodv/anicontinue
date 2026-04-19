@@ -5,6 +5,7 @@ import { generateSchema, sanitizeInput } from '@/lib/validate';
 import { buildPrompt } from '@/lib/prompts/master';
 
 export const maxDuration = 10;
+export const runtime = 'edge';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
