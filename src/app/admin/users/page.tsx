@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, ShieldOff, ShieldCheck, Plus } from "lucide-react";
+import { RefreshCw, ShieldOff, ShieldCheck, Plus, Ban, ShieldCheck as Unban } from "lucide-react";
 
 interface UserRow {
   id: string;
@@ -36,6 +36,14 @@ export default function AdminUsersPage() {
       body: JSON.stringify(body),
     });
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...body } : u));
+    setPending(null);
+  };
+
+  const toggleBan = async (user: UserRow) => {
+    const isBanned = user.role === 'banned';
+    setPending(user.id);
+    await fetch(`/api/admin/users/${user.id}/ban`, { method: isBanned ? 'DELETE' : 'POST' });
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: isBanned ? 'user' : 'banned' } : u));
     setPending(null);
   };
 
@@ -150,7 +158,7 @@ export default function AdminUsersPage() {
                         >
                           <ShieldCheck className="w-4 h-4" />
                         </button>
-                      ) : u.role !== 'super_admin' ? (
+                      ) : u.role === 'moderator' ? (
                         <button
                           onClick={() => patch(u.id, { role: 'user' })}
                           disabled={pending === u.id}
@@ -161,6 +169,22 @@ export default function AdminUsersPage() {
                         </button>
                       ) : (
                         <span className="text-xs text-gray-600 px-2">—</span>
+                      )}
+
+                      {/* Бан */}
+                      {u.role !== 'super_admin' && (
+                        <button
+                          onClick={() => toggleBan(u)}
+                          disabled={pending === u.id}
+                          title={u.role === 'banned' ? 'Разбанить' : 'Заблокировать'}
+                          className={`p-1.5 rounded-lg transition-all disabled:opacity-50 ${
+                            u.role === 'banned'
+                              ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                              : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                          }`}
+                        >
+                          <Ban className="w-4 h-4" />
+                        </button>
                       )}
                     </div>
                   </td>
