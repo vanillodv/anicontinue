@@ -40,7 +40,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
         anime={anime}
         lastChapter={lastChapter}
       />
-      <div className="container mx-auto px-6 pb-20 max-w-7xl">
+      <div className="container mx-auto px-4 md:px-6 pb-12 md:pb-20 max-w-7xl">
         <AnimeChaptersFeed animeId={Number(id)} animeName={anime.title_ru || anime.title_en || ""} />
       </div>
     </main>

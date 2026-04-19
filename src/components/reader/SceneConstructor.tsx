@@ -261,7 +261,7 @@ export default function SceneConstructor({
           className="relative w-full max-w-3xl bg-[#1A1A2E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
+          <div className="p-4 md:p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
             <div className="flex flex-col">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 {formData.continuePrevious
@@ -280,7 +280,7 @@ export default function SceneConstructor({
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8" ref={scrollRef}>
+          <div className="flex-1 overflow-y-auto p-4 md:p-8" ref={scrollRef}>
 
             {/* ── ФОРМА ── */}
             {status === 'idle' && (
@@ -610,7 +610,7 @@ export default function SceneConstructor({
 
           {/* Footer */}
           {status === 'idle' && (
-            <div className="p-6 border-t border-white/5 bg-white/5 space-y-4">
+            <div className="p-4 md:p-6 border-t border-white/5 bg-white/5 space-y-4">
               <label className="flex items-center gap-3 cursor-pointer group select-none">
                 <div
                   onClick={() => setFormData(prev => ({ ...prev, isPublic: !prev.isPublic }))}
@@ -641,7 +641,7 @@ export default function SceneConstructor({
               )}
               <button
                 onClick={handleGenerate}
-                className="w-full bg-[#E8409A] hover:bg-[#d13589] py-5 rounded-2xl font-bold text-xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-3"
+                className="w-full bg-[#E8409A] hover:bg-[#d13589] py-4 md:py-5 rounded-2xl font-bold text-base md:text-xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-3"
               >
                 Создать главу 🚀
               </button>

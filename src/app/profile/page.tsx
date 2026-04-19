@@ -39,11 +39,11 @@ export default async function ProfilePage() {
     : '—';
 
   return (
-    <main className="min-h-screen bg-[#0D0D1A] py-12">
-      <div className="container mx-auto px-6 max-w-5xl space-y-10">
+    <main className="min-h-screen bg-[#0D0D1A] py-8 md:py-12">
+      <div className="container mx-auto px-4 md:px-6 max-w-5xl space-y-6 md:space-y-10">
 
         {/* Шапка профиля */}
-        <section className="flex flex-col md:flex-row items-center gap-8 bg-[#1A1A2E] p-8 rounded-3xl border border-white/5 shadow-2xl">
+        <section className="flex flex-col md:flex-row items-center gap-5 md:gap-8 bg-[#1A1A2E] p-5 md:p-8 rounded-3xl border border-white/5 shadow-2xl">
           <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-[#E8409A]/30 shrink-0 shadow-[0_0_20px_rgba(232,64,154,0.2)]">
             {user.user_metadata.avatar_url ? (
               <Image src={user.user_metadata.avatar_url} alt="Avatar" fill className="object-cover" />

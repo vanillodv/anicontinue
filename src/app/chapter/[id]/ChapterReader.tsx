@@ -77,11 +77,11 @@ export default function ChapterReader({ chapter, anime }: ChapterReaderProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D1A] text-gray-200 py-12">
-      <div className="container mx-auto px-6 max-w-4xl">
+    <div className="min-h-screen bg-[#0D0D1A] text-gray-200 py-8 md:py-12">
+      <div className="container mx-auto px-4 md:px-6 max-w-4xl">
 
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-12 overflow-x-auto whitespace-nowrap pb-2">
+        <nav className="flex items-center gap-2 text-xs md:text-sm text-gray-500 mb-8 md:mb-12 overflow-x-auto whitespace-nowrap pb-2">
           <Link href="/" className="hover:text-[#E8409A] flex items-center gap-1 transition-colors">
             <Home className="w-3.5 h-3.5" />
             Главная
@@ -102,8 +102,8 @@ export default function ChapterReader({ chapter, anime }: ChapterReaderProps) {
         </nav>
 
         {/* Header */}
-        <header className="mb-16 space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+        <header className="mb-8 md:mb-16 space-y-3 md:space-y-4">
+          <h1 className="text-2xl md:text-5xl font-bold text-white leading-tight">
             {chapter.title || "Новая глава"}
           </h1>
           <div className="flex items-center gap-3 text-sm text-gray-500 italic">
@@ -114,9 +114,9 @@ export default function ChapterReader({ chapter, anime }: ChapterReaderProps) {
         </header>
 
         {/* Content */}
-        <article className="max-w-[680px] mx-auto mb-20">
+        <article className="max-w-[680px] mx-auto mb-12 md:mb-20">
           <div
-            className="font-serif text-[18px] leading-[1.8] space-y-8 text-gray-300 selection:bg-[#E8409A]/30"
+            className="font-serif text-[16px] md:text-[18px] leading-[1.8] space-y-6 md:space-y-8 text-gray-300 selection:bg-[#E8409A]/30"
             style={{ fontFamily: 'Georgia, serif' }}
           >
             {chapter.content.split('\n').map((paragraph, idx) => (
@@ -133,7 +133,7 @@ export default function ChapterReader({ chapter, anime }: ChapterReaderProps) {
         <footer className="max-w-[680px] mx-auto border-t border-white/5 pt-12 text-center space-y-12">
 
           {/* Like + Rating */}
-          <div className="space-y-6 bg-[#1A1A2E] p-8 rounded-3xl border border-white/5">
+          <div className="space-y-6 bg-[#1A1A2E] p-5 md:p-8 rounded-3xl border border-white/5">
             <h3 className="text-xl font-bold text-white">Понравилась глава?</h3>
 
             {/* Like button */}

@@ -96,13 +96,13 @@ export default function CommunityPage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#0D0D1A] text-white py-16">
-      <div className="container mx-auto px-6 max-w-6xl">
+    <main className="min-h-screen bg-[#0D0D1A] text-white py-10 md:py-16">
+      <div className="container mx-auto px-4 md:px-6 max-w-6xl">
 
         {/* Заголовок */}
-        <div className="mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">🌐 Сообщество</h1>
-          <p className="text-gray-400 text-lg">Читайте истории, созданные другими фанатами</p>
+        <div className="mb-7 md:mb-10">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-2 md:mb-3">🌐 Сообщество</h1>
+          <p className="text-gray-400 text-base md:text-lg">Читайте истории, созданные другими фанатами</p>
         </div>
 
         {/* Фильтры */}

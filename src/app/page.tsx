@@ -73,22 +73,22 @@ export default async function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D1A] via-transparent to-[#0D0D1A]/60 pointer-events-none" />
 
         {/* Content */}
-        <div className="relative z-10 container mx-auto px-6 py-32 max-w-6xl">
+        <div className="relative z-10 container mx-auto px-6 py-16 md:py-32 max-w-6xl">
           <div className="max-w-2xl">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/30 text-[#E8409A] text-sm font-semibold mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/30 text-[#E8409A] text-sm font-semibold mb-6 md:mb-8">
               <Sparkles className="w-3.5 h-3.5" />
               Фанфики нового поколения
             </div>
 
-            <h1 className="text-6xl md:text-8xl font-black leading-none mb-6 tracking-tight">
+            <h1 className="text-5xl sm:text-6xl md:text-8xl font-black leading-none mb-5 md:mb-6 tracking-tight">
               Продолжи<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8409A] to-[#ff6eb4]">
                 своё аниме
               </span>
             </h1>
 
-            <p className="text-xl text-gray-300 leading-relaxed mb-10 max-w-lg">
+            <p className="text-base md:text-xl text-gray-300 leading-relaxed mb-8 md:mb-10 max-w-lg">
               Создавай фанфик-главы вместе с AI — в атмосфере оригинала, с любимыми персонажами, за считанные секунды.
             </p>
 
@@ -117,10 +117,10 @@ export default async function Home() {
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid grid-cols-3 divide-x divide-white/5">
             {stats.map(({ value, label, icon: Icon, color }) => (
-              <div key={label} className="py-8 px-6 text-center">
-                <Icon className={`w-6 h-6 ${color} mx-auto mb-3 opacity-80`} />
-                <div className={`text-3xl md:text-4xl font-black ${color} mb-1`}>{value}</div>
-                <div className="text-gray-500 text-sm">{label}</div>
+              <div key={label} className="py-5 md:py-8 px-2 sm:px-6 text-center">
+                <Icon className={`w-5 h-5 md:w-6 md:h-6 ${color} mx-auto mb-2 md:mb-3 opacity-80`} />
+                <div className={`text-2xl md:text-4xl font-black ${color} mb-0.5 md:mb-1`}>{value}</div>
+                <div className="text-gray-500 text-xs md:text-sm leading-tight">{label}</div>
               </div>
             ))}
           </div>
@@ -128,10 +128,10 @@ export default async function Home() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section className="py-24 container mx-auto px-6 max-w-6xl">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black mb-4">Как это работает</h2>
-          <p className="text-gray-400 text-lg">Четыре шага до готовой главы</p>
+      <section className="py-14 md:py-24 container mx-auto px-6 max-w-6xl">
+        <div className="text-center mb-10 md:mb-16">
+          <h2 className="text-3xl md:text-5xl font-black mb-3 md:mb-4">Как это работает</h2>
+          <p className="text-gray-400 text-base md:text-lg">Четыре шага до готовой главы</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -155,12 +155,12 @@ export default async function Home() {
       </section>
 
       {/* ── POPULAR ANIME ────────────────────────────────────────────── */}
-      <section className="py-16 bg-[#0A0A18]">
+      <section className="py-10 md:py-16 bg-[#0A0A18]">
         <div className="container mx-auto px-6 max-w-6xl">
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center justify-between mb-6 md:mb-10">
             <div>
-              <h2 className="text-3xl md:text-4xl font-black">Популярные аниме</h2>
-              <p className="text-gray-500 mt-1">Самые рейтинговые тайтлы каталога</p>
+              <h2 className="text-2xl md:text-4xl font-black">Популярные аниме</h2>
+              <p className="text-gray-500 text-sm mt-1">Самые рейтинговые тайтлы каталога</p>
             </div>
             <Link
               href="/catalog"
@@ -214,11 +214,11 @@ export default async function Home() {
 
       {/* ── RECENT CHAPTERS ──────────────────────────────────────────── */}
       {(recentChapters ?? []).length > 0 && (
-        <section className="py-24 container mx-auto px-6 max-w-6xl">
-          <div className="flex items-center justify-between mb-10">
+        <section className="py-14 md:py-24 container mx-auto px-6 max-w-6xl">
+          <div className="flex items-center justify-between mb-6 md:mb-10">
             <div>
-              <h2 className="text-3xl md:text-4xl font-black">Свежие главы</h2>
-              <p className="text-gray-500 mt-1">Последние работы от сообщества</p>
+              <h2 className="text-2xl md:text-4xl font-black">Свежие главы</h2>
+              <p className="text-gray-500 text-sm mt-1">Последние работы от сообщества</p>
             </div>
             <Link
               href="/community"
@@ -285,9 +285,9 @@ export default async function Home() {
       )}
 
       {/* ── BOTTOM CTA ───────────────────────────────────────────────── */}
-      <section className="py-24 px-6">
+      <section className="py-12 md:py-24 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl">
-          <div className="relative bg-gradient-to-br from-[#E8409A]/20 via-[#1A1A2E] to-[#7B61FF]/20 border border-[#E8409A]/20 rounded-3xl p-12 text-center overflow-hidden">
+          <div className="relative bg-gradient-to-br from-[#E8409A]/20 via-[#1A1A2E] to-[#7B61FF]/20 border border-[#E8409A]/20 rounded-3xl p-6 sm:p-8 md:p-12 text-center overflow-hidden">
             {/* Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#E8409A]/10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10">
@@ -295,10 +295,10 @@ export default async function Home() {
                 <Star className="w-3.5 h-3.5 fill-[#E8409A]" />
                 3 главы бесплатно
               </div>
-              <h2 className="text-4xl md:text-5xl font-black mb-4">
+              <h2 className="text-3xl md:text-5xl font-black mb-3 md:mb-4">
                 Готов написать свою историю?
               </h2>
-              <p className="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+              <p className="text-gray-400 text-sm md:text-lg mb-6 md:mb-8 max-w-xl mx-auto">
                 Зарегистрируйся и получи 3 бесплатные генерации прямо сейчас — без карты, без подписки.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

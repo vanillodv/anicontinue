@@ -48,11 +48,11 @@ export default function CatalogClient({ initialAnime }: { initialAnime: Anime[] 
   };
 
   return (
-    <div className="container mx-auto px-6 py-12">
+    <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
       {/* Заголовок + поиск */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-12">
         <div>
-          <h1 className="text-4xl font-bold border-l-4 border-[#E8409A] pl-4">Каталог аниме</h1>
+          <h1 className="text-3xl md:text-4xl font-bold border-l-4 border-[#E8409A] pl-4">Каталог аниме</h1>
           {!isSearching && (
             <p className="text-gray-500 text-sm mt-2 pl-5">
               {allAnime.length} аниме · страница {page} из {totalPages || 1}

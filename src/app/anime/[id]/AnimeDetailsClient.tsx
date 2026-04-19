@@ -23,10 +23,10 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
   };
 
   return (
-    <div className="container mx-auto px-6 py-12">
-      <div className="flex flex-col lg:flex-row gap-12">
+    <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div className="flex flex-col lg:flex-row gap-6 md:gap-12">
         <div className="w-full lg:w-1/3 shrink-0">
-          <div className="relative aspect-[2/3] w-full rounded-3xl overflow-hidden shadow-2xl border border-white/5">
+          <div className="relative aspect-[2/3] w-full max-w-xs mx-auto lg:max-w-none rounded-3xl overflow-hidden shadow-2xl border border-white/5">
             {anime.poster_url && (
               <Image
                 src={proxyImage(anime.poster_url)!}
@@ -45,7 +45,7 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
 
         <div className="flex flex-col gap-8">
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold text-white">{anime.title_ru || anime.title_en}</h1>
+            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white">{anime.title_ru || anime.title_en}</h1>
             <div className="flex flex-wrap gap-2">
               {Array.isArray(anime.genres) && anime.genres.map((genre: string) => (
                 <span key={genre} className="px-3 py-1 bg-[#E8409A]/10 text-[#E8409A] rounded-full text-sm font-medium border border-[#E8409A]/20">{translateGenre(genre)}</span>
@@ -74,31 +74,31 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
 
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-300 uppercase tracking-wider">Описание</h2>
-            <p className="text-gray-400 leading-relaxed text-lg">{anime.synopsis}</p>
+            <p className="text-gray-400 leading-relaxed text-base md:text-lg">{anime.synopsis}</p>
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row gap-4">
+          <div className="pt-4 md:pt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
             {lastChapter ? (
               <>
                 <button
                   onClick={() => handleStart(true)}
-                  className="bg-[#E8409A] hover:bg-[#d13589] text-white text-xl font-bold py-5 px-10 rounded-2xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-105 flex items-center justify-center gap-3"
+                  className="bg-[#E8409A] hover:bg-[#d13589] text-white text-base md:text-xl font-bold py-4 md:py-5 px-6 md:px-10 rounded-2xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-105 flex items-center justify-center gap-3"
                 >
-                  Продолжить историю <ArrowRight className="w-6 h-6" />
+                  Продолжить историю <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
                 <button
                   onClick={() => handleStart(false)}
-                  className="bg-white/5 hover:bg-white/10 text-white text-lg font-bold py-5 px-10 rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-3"
+                  className="bg-white/5 hover:bg-white/10 text-white text-base md:text-lg font-bold py-4 md:py-5 px-6 md:px-10 rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-3"
                 >
-                  <RotateCcw className="w-5 h-5" /> Начать заново
+                  <RotateCcw className="w-4 h-4 md:w-5 md:h-5" /> Начать заново
                 </button>
               </>
             ) : (
               <button
                 onClick={() => handleStart(false)}
-                className="bg-[#E8409A] hover:bg-[#d13589] text-white text-xl font-bold py-5 px-12 rounded-2xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-105 flex items-center justify-center gap-3"
+                className="bg-[#E8409A] hover:bg-[#d13589] text-white text-base md:text-xl font-bold py-4 md:py-5 px-8 md:px-12 rounded-2xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-105 flex items-center justify-center gap-3"
               >
-                <Sparkles className="w-6 h-6" /> Создать первую главу
+                <Sparkles className="w-5 h-5 md:w-6 md:h-6" /> Создать первую главу
               </button>
             )}
           </div>
