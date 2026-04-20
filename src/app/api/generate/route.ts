@@ -75,6 +75,10 @@ export async function POST(req: Request) {
 
     if (profileError) console.error('Profile fetch error:', profileError);
 
+    if (profile?.role === 'banned') {
+      return NextResponse.json({ error: 'BANNED', message: 'Ваш аккаунт заблокирован.' }, { status: 403 });
+    }
+
     if (profile && profile.chapters_used >= profile.chapters_limit) {
       console.log('Limit reached for user');
       return NextResponse.json({ error: 'LIMIT_REACHED' }, { status: 403 });

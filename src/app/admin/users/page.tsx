@@ -21,6 +21,7 @@ export default function AdminUsersPage() {
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [addAmount, setAddAmount] = useState("10");
   const [addNote, setAddNote] = useState("");
+  const [banError, setBanError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/users')
@@ -42,10 +43,21 @@ export default function AdminUsersPage() {
 
   const toggleBan = async (user: UserRow) => {
     const isBanned = user.role === 'banned';
+    setBanError(null);
     setPending(user.id);
-    await fetch(`/api/admin/users/${user.id}/ban`, { method: isBanned ? 'DELETE' : 'POST' });
-    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: isBanned ? 'user' : 'banned' } : u));
-    setPending(null);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/ban`, { method: isBanned ? 'DELETE' : 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setBanError(data.error || `Ошибка ${res.status}`);
+      } else {
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: isBanned ? 'user' : 'banned' } : u));
+      }
+    } catch (e: any) {
+      setBanError(e.message || 'Сетевая ошибка');
+    } finally {
+      setPending(null);
+    }
   };
 
   const addGenerations = async (user: UserRow) => {
@@ -70,6 +82,13 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-black text-white">Пользователи</h1>
+
+      {banError && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+          <span>⚠️ Ошибка бана: {banError}</span>
+          <button onClick={() => setBanError(null)} className="ml-auto text-red-400/60 hover:text-red-400">✕</button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="text-gray-500">Загрузка...</div>
