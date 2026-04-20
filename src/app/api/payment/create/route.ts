@@ -98,7 +98,8 @@ export async function POST(req: Request) {
       idempotencyKey,
     });
 
-    // Log the pending payment (non-critical — silently skip if table doesn't exist yet)
+    // Критично: лог должен быть записан ДО возврата paymentId.
+    // Без него webhook не сможет идемпотентно обработать оплату.
     const { error: logErr } = await supabase.from('payment_logs').insert({
       user_id: user.id,
       payment_id: payment.id,
@@ -108,7 +109,10 @@ export async function POST(req: Request) {
       status: 'pending',
       idempotency_key: idempotencyKey,
     });
-    if (logErr) console.warn('payment_logs insert skipped:', logErr.message);
+    if (logErr) {
+      console.error('payment_logs insert failed:', logErr.message);
+      return NextResponse.json({ error: 'DB_ERROR' }, { status: 500 });
+    }
 
     return NextResponse.json({
       paymentId: payment.id,

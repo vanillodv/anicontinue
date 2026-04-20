@@ -1,14 +1,17 @@
-import { requireAdmin, serviceClient } from '@/lib/admin/guard';
+import { getAdminContext, guardUserTarget, serviceClient } from '@/lib/admin/guard';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface Params { params: Promise<{ id: string }> }
 
 // POST — заблокировать пользователя
 export async function POST(_req: NextRequest, { params }: Params) {
-  const denied = await requireAdmin();
-  if (denied) return NextResponse.json(denied, { status: denied.error === 'Unauthorized' ? 401 : 403 });
+  const auth = await getAdminContext();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id } = await params;
+  const guard = await guardUserTarget(auth.ctx, id);
+  if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
+
   const svc = serviceClient();
 
   // Обновляем роль в profiles (главная проверка в приложении)
@@ -29,10 +32,13 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
 // DELETE — разблокировать пользователя
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const denied = await requireAdmin();
-  if (denied) return NextResponse.json(denied, { status: denied.error === 'Unauthorized' ? 401 : 403 });
+  const auth = await getAdminContext();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id } = await params;
+  const guard = await guardUserTarget(auth.ctx, id);
+  if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
+
   const svc = serviceClient();
 
   const { error: profileError } = await svc

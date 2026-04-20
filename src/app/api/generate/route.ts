@@ -5,6 +5,13 @@ import { generateSchema, sanitizeInput } from '@/lib/validate';
 import { buildPrompt } from '@/lib/prompts/master';
 import { createClient as createSvcClient } from '@supabase/supabase-js';
 
+function svc() {
+  return createSvcClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
 // Логируем ошибку генерации (не бросает исключений)
 async function logGenError(
   userId: string | null,
@@ -13,17 +20,19 @@ async function logGenError(
   message: string
 ) {
   try {
-    const svc = createSvcClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    await svc.from('generation_errors').insert({
+    await svc().from('generation_errors').insert({
       user_id: userId,
       anime_id: animeId,
       error_type: errorType,
       error_message: String(message).slice(0, 500),
     });
   } catch { /* silent */ }
+}
+
+// Откатываем списание главы, если генерация сорвалась
+async function refundChapter(userId: string) {
+  try { await svc().rpc('refund_chapter', { p_user_id: userId }); }
+  catch (e) { console.error('refund_chapter failed:', e); }
 }
 
 export const maxDuration = 10;
@@ -33,10 +42,17 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
+// Порог rate limit: max 5 генераций в минуту на пользователя + 10 в минуту на IP
+const USER_RPM = 5;
+const IP_RPM = 10;
+const WINDOW_SEC = 60;
+
 export async function POST(req: Request) {
+  let consumedUserId: string | null = null;
+
   try {
     const body = await req.json();
-    
+
     const result = generateSchema.safeParse(body);
     if (!result.success) {
       console.error('Validation failed:', result.error.format());
@@ -60,32 +76,62 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // Гость не может генерировать
     if (authError || !user) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
-    console.log('User ID:', user.id);
+    // Rate limit по IP и user_id
+    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+    const svcClient = svc();
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    const [{ data: userOk }, { data: ipOk }] = await Promise.all([
+      svcClient.rpc('check_rate_limit', {
+        p_key: `gen:user:${user.id}`,
+        p_window_seconds: WINDOW_SEC,
+        p_limit: USER_RPM,
+      }),
+      svcClient.rpc('check_rate_limit', {
+        p_key: `gen:ip:${ip}`,
+        p_window_seconds: WINDOW_SEC,
+        p_limit: IP_RPM,
+      }),
+    ]);
 
-    if (profileError) console.error('Profile fetch error:', profileError);
-
-    if (profile?.role === 'banned') {
-      return NextResponse.json({ error: 'BANNED', message: 'Ваш аккаунт заблокирован.' }, { status: 403 });
+    if (userOk === false || ipOk === false) {
+      return NextResponse.json(
+        { error: 'RATE_LIMITED', message: 'Слишком много запросов. Подождите минуту.' },
+        { status: 429 }
+      );
     }
 
-    if (profile && profile.chapters_used >= profile.chapters_limit) {
-      console.log('Limit reached for user');
+    // Атомарное списание: проверка бан+лимит+инкремент одной транзакцией
+    const { data: canProceed, error: rpcError } = await svcClient.rpc('consume_chapter', {
+      p_user_id: user.id,
+    });
+
+    if (rpcError) {
+      console.error('consume_chapter error:', rpcError);
+      return NextResponse.json({ error: 'DB_ERROR' }, { status: 500 });
+    }
+
+    if (!canProceed) {
+      // Разбираем причину: бан или лимит
+      const { data: profile } = await svcClient
+        .from('profiles')
+        .select('role, chapters_used, chapters_limit')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'banned') {
+        return NextResponse.json({ error: 'BANNED', message: 'Ваш аккаунт заблокирован.' }, { status: 403 });
+      }
       return NextResponse.json({ error: 'LIMIT_REACHED' }, { status: 403 });
     }
 
+    consumedUserId = user.id;
+
     let previousChapters: any[] = [];
-    if (params.continuePrevious && user) {
+    if (params.continuePrevious) {
       const { data: prev } = await supabase
         .from('chapters')
         .select('title, summary')
@@ -104,6 +150,8 @@ export async function POST(req: Request) {
 
     if (animeError || !anime) {
       console.error('Anime fetch error:', animeError);
+      await refundChapter(user.id);
+      consumedUserId = null;
       return NextResponse.json({ error: 'ANIME_NOT_FOUND' }, { status: 404 });
     }
 
@@ -114,9 +162,9 @@ export async function POST(req: Request) {
       .limit(1)
       .single();
 
-    const baseSystemPrompt = activePrompt?.system_prompt || 
+    const baseSystemPrompt = activePrompt?.system_prompt ||
       "Ты автор фанфика. Пиши ТОЛЬКО на русском. PG-13, без галлюцинаций канона.";
-    
+
     const finalSystemPrompt = `${baseSystemPrompt}\nОтвечай СТРОГО в формате XML: <title>Название</title><content>Текст главы</content><summary>Краткая сводка для следующей главы</summary>. Контент PG-13.`;
 
     const { system: generatedSystem, user: userPrompt } = buildPrompt(anime, params, previousChapters);
@@ -132,6 +180,7 @@ export async function POST(req: Request) {
       messages: [{ role: 'user', content: userPrompt }],
     });
 
+    const userId = user.id;
     const encoder = new TextEncoder();
     const customStream = new ReadableStream({
       async start(controller) {
@@ -142,6 +191,7 @@ export async function POST(req: Request) {
         let titleSent = false;
         let contentSent = false;
         let summarySent = false;
+        let chapterSaved = false;
 
         try {
           console.log('Stream started');
@@ -191,50 +241,51 @@ export async function POST(req: Request) {
           console.log('Stream finished, finalizing...');
           const finalResponse = await stream.finalMessage();
           const usage = finalResponse.usage;
-          let chapterId = null;
+          let chapterId: string | null = null;
 
-          if (user) {
-            const { data: chapter, error: chapterErr } = await supabase
-              .from('chapters')
-              .insert({
-                user_id: user.id,
-                anime_id: params.animeId,
-                title: title || 'Без названия',
-                content: content || 'Текст отсутствует',
-                summary: summary || '',
-                scene_params: params,
-                is_public: params.isPublic
-              })
-              .select('id')
-              .single();
+          const { data: chapter, error: chapterErr } = await supabase
+            .from('chapters')
+            .insert({
+              user_id: userId,
+              anime_id: params.animeId,
+              title: title || 'Без названия',
+              content: content || 'Текст отсутствует',
+              summary: summary || '',
+              scene_params: params,
+              is_public: params.isPublic,
+            })
+            .select('id')
+            .single();
 
-            if (chapterErr) {
-              console.error('Database Error (Insert Chapter):', JSON.stringify(chapterErr));
-              controller.enqueue(encoder.encode(JSON.stringify({ type: 'db_error', message: chapterErr.message, code: chapterErr.code }) + '\n'));
-            } else {
-              chapterId = chapter.id;
-              await supabase.from('profiles')
-                .update({ chapters_used: (profile?.chapters_used || 0) + 1 })
-                .eq('id', user.id);
-            }
+          if (chapterErr) {
+            console.error('Database Error (Insert Chapter):', JSON.stringify(chapterErr));
+            controller.enqueue(encoder.encode(JSON.stringify({ type: 'db_error', message: chapterErr.message, code: chapterErr.code }) + '\n'));
+            // Вернём списание — главу сохранить не удалось
+            await refundChapter(userId);
+          } else {
+            chapterId = chapter.id;
+            chapterSaved = true;
           }
 
           await supabase.from('ai_usage_logs').insert({
-            user_id: user?.id || null,
+            user_id: userId,
             chapter_id: chapterId,
             input_tokens: usage.input_tokens,
             output_tokens: usage.output_tokens,
-            cost_usd: (usage.input_tokens * 0.003 + usage.output_tokens * 0.015) / 1000, 
-            model: 'claude-haiku-4-5-20251001'
+            cost_usd: (usage.input_tokens * 0.003 + usage.output_tokens * 0.015) / 1000,
+            model: 'claude-haiku-4-5-20251001',
           });
 
-          controller.enqueue(encoder.encode(JSON.stringify({ type: 'done', chapterId: chapterId || 'guest' }) + '\n'));
+          controller.enqueue(encoder.encode(JSON.stringify({ type: 'done', chapterId: chapterId || 'error' }) + '\n'));
           controller.close();
           console.log('--- END GENERATION REQUEST ---');
         } catch (err: any) {
           console.error('STREAM ERROR:', err);
+          if (!chapterSaved) {
+            await refundChapter(userId);
+          }
           await logGenError(
-            user?.id ?? null,
+            userId,
             params.animeId,
             err?.message?.toLowerCase().includes('timeout') ? 'timeout' : 'stream_error',
             err?.message ?? String(err)
@@ -254,6 +305,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('TOP-LEVEL ERROR:', error);
+    if (consumedUserId) await refundChapter(consumedUserId);
     await logGenError(null, null, 'ai_error', error?.message ?? String(error));
     return NextResponse.json(
       { error: 'GENERATION_FAILED', message: error.message },

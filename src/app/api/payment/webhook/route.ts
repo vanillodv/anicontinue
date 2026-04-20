@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { serviceClient } from '@/lib/admin/guard';
 import { getPlanById, getPackById, getExpiresAt } from '@/lib/plans';
 
 const YOOKASSA_SHOP_ID = process.env.YOOKASSA_SHOP_ID || '';
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'NO_PAYMENT_ID' }, { status: 400 });
     }
 
-    // Always verify with YooKassa directly (don't trust webhook body alone)
+    // Независимая верификация у YooKassa (не доверяем телу webhook'а)
     const verified = await verifyPayment(paymentId);
 
     if (verified.status !== 'succeeded') {
@@ -56,24 +56,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'MISSING_METADATA' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    // service role: webhook не имеет сессии пользователя
+    const svc = serviceClient();
 
-    // Idempotency: check if already processed (graceful if table missing)
-    const { data: existingLog } = await supabase
-      .from('payment_logs')
-      .select('id, status')
-      .eq('payment_id', paymentId)
-      .maybeSingle();
-
-    if (existingLog?.status === 'succeeded') {
-      console.log(`Payment ${paymentId} already processed, skipping`);
-      return NextResponse.json({ ok: true });
-    }
-
-    // Fetch current profile
-    const { data: profile, error: profileError } = await supabase
+    // Получим текущий профиль для корректного расчёта chapters_limit при pack
+    const { data: profile, error: profileError } = await svc
       .from('profiles')
-      .select('*')
+      .select('chapters_limit')
       .eq('id', metadata.user_id)
       .single();
 
@@ -83,16 +72,18 @@ export async function POST(req: Request) {
     }
 
     let updatePayload: Record<string, any> = {};
+    let amount = 0;
 
     if (metadata.purchase_type === 'plan') {
       const plan = getPlanById(metadata.purchase_id as any);
       if (!plan || plan.price === 0) {
         return NextResponse.json({ error: 'INVALID_PLAN' }, { status: 400 });
       }
+      amount = plan.price;
       updatePayload = {
         plan: plan.id,
         chapters_limit: plan.chaptersLimit,
-        chapters_used: 0,                 // reset on plan upgrade
+        chapters_used: 0,
         subscription_expires_at: getExpiresAt(),
       };
     } else {
@@ -100,29 +91,33 @@ export async function POST(req: Request) {
       if (!pack) {
         return NextResponse.json({ error: 'INVALID_PACK' }, { status: 400 });
       }
-      // Add chapters to current limit (don't reset used)
+      amount = pack.price;
       updatePayload = {
         chapters_limit: (profile.chapters_limit || 3) + pack.chapters,
       };
     }
 
-    // Apply update
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(updatePayload)
-      .eq('id', metadata.user_id);
+    // Атомарное применение: RPC берёт for-update лок на payment_logs,
+    // помечает succeeded (или выходит, если уже применён), и только тогда
+    // обновляет profiles. Повторный webhook не даст задвоение.
+    const { data: applied, error: rpcError } = await svc.rpc('apply_payment', {
+      p_payment_id: paymentId,
+      p_user_id: metadata.user_id,
+      p_purchase_type: metadata.purchase_type,
+      p_purchase_id: metadata.purchase_id,
+      p_amount: amount,
+      p_update: updatePayload,
+    });
 
-    if (updateError) {
-      console.error('Profile update failed:', updateError);
-      // Still mark payment log but with partial status
+    if (rpcError) {
+      console.error('apply_payment RPC failed:', rpcError);
+      return NextResponse.json({ error: 'APPLY_FAILED' }, { status: 500 });
     }
 
-    // Update payment log (non-critical)
-    await supabase
-      .from('payment_logs')
-      .update({ status: 'succeeded', processed_at: new Date().toISOString() })
-      .eq('payment_id', paymentId)
-      .then(({ error }) => { if (error) console.warn('payment_logs update skipped:', error.message); });
+    if (applied === false) {
+      console.log(`Payment ${paymentId} already applied, skipping`);
+      return NextResponse.json({ ok: true });
+    }
 
     console.log(`Payment ${paymentId} processed: ${metadata.purchase_type} ${metadata.purchase_id} for user ${metadata.user_id}`);
 
@@ -130,7 +125,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('Webhook error:', error);
-    // Return 200 so YooKassa doesn't retry indefinitely
+    // Возвращаем 200, чтобы YooKassa не ретраил бесконечно
     return NextResponse.json({ ok: true });
   }
 }

@@ -1,19 +1,23 @@
-import { requireAdmin, serviceClient } from '@/lib/admin/guard';
-import { createClient } from '@/lib/supabase/server';
+import { getAdminContext, guardUserTarget, serviceClient } from '@/lib/admin/guard';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface Params { params: Promise<{ id: string }> }
 
+const MAX_GRANT = 10000; // Санитарный лимит — защита от опечатки/абьюза
+
 export async function POST(req: NextRequest, { params }: Params) {
-  const denied = await requireAdmin();
-  if (denied) return NextResponse.json(denied, { status: 403 });
+  const auth = await getAdminContext();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const { ctx } = auth;
 
   const { id } = await params;
-  const { amount, note } = await req.json();
-  if (!amount || amount <= 0) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+  const guard = await guardUserTarget(ctx, id);
+  if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { amount, note } = await req.json();
+  if (!Number.isInteger(amount) || amount <= 0 || amount > MAX_GRANT) {
+    return NextResponse.json({ error: `Invalid amount (1..${MAX_GRANT})` }, { status: 400 });
+  }
 
   const svc = serviceClient();
 
@@ -26,7 +30,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   const [updateResult, logResult] = await Promise.all([
     svc.from('profiles').update({ chapters_limit: newLimit }).eq('id', id),
     svc.from('generation_grants').insert({
-      admin_id: user?.id ?? null,
+      admin_id: ctx.userId,
       user_id: id,
       amount,
       note: note || '',
