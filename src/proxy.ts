@@ -24,7 +24,30 @@ export async function proxy(req: NextRequest) {
   );
 
   // This refreshes the session token in cookies
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Admin guard — второй рубеж поверх requireAdmin()/requireAdminPage().
+  // Защищает от забытых проверок в отдельных роутах/страницах.
+  const path = req.nextUrl.pathname;
+  const isAdminPath = path.startsWith('/admin') || path.startsWith('/api/admin');
+  if (isAdminPath) {
+    const isApi = path.startsWith('/api/admin');
+    if (!user) {
+      return isApi
+        ? NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        : NextResponse.redirect(new URL('/login', req.url));
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (!profile?.role || !['admin', 'super_admin'].includes(profile.role)) {
+      return isApi
+        ? NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        : NextResponse.redirect(new URL('/', req.url));
+    }
+  }
 
   // Rate limit on /api/generate
   if (req.nextUrl.pathname.startsWith('/api/generate')) {
