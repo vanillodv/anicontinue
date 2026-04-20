@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { requireAdmin } from '@/lib/admin/guard';
+import { getAdminContext } from '@/lib/admin/guard';
+import { logAdminAction } from '@/lib/admin/audit';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const authError = await requireAdmin();
-  if (authError) return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
+  const auth = await getAdminContext();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id } = await params;
   const { status } = await req.json();
@@ -21,6 +22,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction({
+    adminId: auth.ctx.userId,
+    action: 'suggestion.status',
+    targetType: 'suggestion',
+    targetId: id,
+    new: { status },
+  });
 
   return NextResponse.json({ ok: true });
 }

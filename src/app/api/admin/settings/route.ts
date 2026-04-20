@@ -1,4 +1,5 @@
-import { requireAdmin, serviceClient } from '@/lib/admin/guard';
+import { getAdminContext, requireAdmin, serviceClient } from '@/lib/admin/guard';
+import { logAdminAction } from '@/lib/admin/audit';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -18,8 +19,8 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const denied = await requireAdmin();
-  if (denied) return NextResponse.json(denied, { status: 403 });
+  const auth = await getAdminContext();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body: Record<string, string> = await req.json();
   const allowed = ['default_chapters_limit', 'registration_enabled', 'maintenance_mode', 'site_notice'];
@@ -35,5 +36,14 @@ export async function PATCH(req: NextRequest) {
     .upsert(upserts, { onConflict: 'key' });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction({
+    adminId: auth.ctx.userId,
+    action: 'settings.update',
+    targetType: 'site_settings',
+    targetId: upserts.map(u => u.key).join(','),
+    new: Object.fromEntries(upserts.map(u => [u.key, u.value])),
+  });
+
   return NextResponse.json({ ok: true });
 }

@@ -1,4 +1,5 @@
-import { requireAdmin, serviceClient } from '@/lib/admin/guard';
+import { getAdminContext, requireAdmin, serviceClient } from '@/lib/admin/guard';
+import { logAdminAction } from '@/lib/admin/audit';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -25,8 +26,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = await requireAdmin();
-  if (denied) return NextResponse.json(denied, { status: 403 });
+  const auth = await getAdminContext();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
   const allowed = ['title_ru', 'title_en', 'title_jp', 'synopsis', 'genres', 'characters',
@@ -38,5 +39,14 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await serviceClient().from('anime').insert(insert).select('id').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction({
+    adminId: auth.ctx.userId,
+    action: 'anime.create',
+    targetType: 'anime',
+    targetId: String(data.id),
+    new: insert,
+  });
+
   return NextResponse.json({ ok: true, id: data.id });
 }

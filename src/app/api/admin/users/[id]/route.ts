@@ -1,4 +1,5 @@
 import { getAdminContext, guardUserTarget, serviceClient } from '@/lib/admin/guard';
+import { logAdminAction } from '@/lib/admin/audit';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface Params { params: Promise<{ id: string }> }
@@ -40,8 +41,26 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'No valid fields' }, { status: 400 });
   }
 
-  const { error } = await serviceClient().from('profiles').update(update).eq('id', id);
+  const svc = serviceClient();
+
+  // Снимок до обновления для audit-log
+  const { data: oldRow } = await svc
+    .from('profiles')
+    .select(Object.keys(update).join(','))
+    .eq('id', id)
+    .single();
+
+  const { error } = await svc.from('profiles').update(update).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction({
+    adminId: ctx.userId,
+    action: 'user.patch',
+    targetType: 'profile',
+    targetId: id,
+    old: oldRow as any,
+    new: update,
+  });
 
   return NextResponse.json({ ok: true });
 }

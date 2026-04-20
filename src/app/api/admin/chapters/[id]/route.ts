@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import { requireAdmin, serviceClient } from '@/lib/admin/guard';
+import { getAdminContext, requireAdmin, serviceClient } from '@/lib/admin/guard';
+import { logAdminAction } from '@/lib/admin/audit';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface Params { params: Promise<{ id: string }> }
@@ -22,8 +23,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // Soft-delete / restore
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const denied = await requireAdmin();
-  if (denied) return NextResponse.json(denied, { status: denied.error === 'Unauthorized' ? 401 : 403 });
+  const auth = await getAdminContext();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id } = await params;
   const { action } = await req.json(); // 'delete' | 'restore' | 'unpublish'
@@ -40,6 +41,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const { error } = await supabase.from('chapters').update(update).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction({
+    adminId: auth.ctx.userId,
+    action: 'chapter.' + action,
+    targetType: 'chapter',
+    targetId: id,
+    new: update,
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -1,4 +1,5 @@
 import { getAdminContext, guardUserTarget, serviceClient } from '@/lib/admin/guard';
+import { logAdminAction } from '@/lib/admin/audit';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface Params { params: Promise<{ id: string }> }
@@ -39,6 +40,15 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   if (updateResult.error) return NextResponse.json({ error: updateResult.error.message }, { status: 500 });
   if (logResult.error) console.error('Grant log error:', logResult.error);
+
+  await logAdminAction({
+    adminId: ctx.userId,
+    action: 'user.grant',
+    targetType: 'profile',
+    targetId: id,
+    old: { chapters_limit: profile.chapters_limit },
+    new: { chapters_limit: newLimit, amount, note: note || '' },
+  });
 
   return NextResponse.json({ ok: true, new_limit: newLimit });
 }

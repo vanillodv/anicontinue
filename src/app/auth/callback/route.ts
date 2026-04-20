@@ -55,14 +55,48 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(`${origin}/auth/registration-closed`)
         }
 
-        // Создаём профиль с лимитом из настроек
-        await supabase.from('profiles').insert([{
-          id: data.user.id,
-          username: data.user.user_metadata.full_name || data.user.email?.split('@')[0],
-          plan: 'free',
-          chapters_used: 0,
-          chapters_limit: settings.default_chapters_limit,
-        }])
+        // Пытаемся взять имя из OAuth, нормализуем под валидатор в БД
+        // (A-Za-z0-9_\-. кириллица пробел, 2..32).
+        const rawName = data.user.user_metadata.full_name || data.user.email?.split('@')[0] || '';
+        const cleaned = rawName
+          .replace(/[^A-Za-z0-9_\-. а-яА-ЯёЁ]/g, '')
+          .trim()
+          .slice(0, 32);
+        const baseName = cleaned.length >= 2 ? cleaned : null;
+
+        // Пробуем ряд суффиксов до 5 попыток; если всё занято — записываем username=null,
+        // юзер выберет имя сам через /api/user/username.
+        let finalUsername: string | null = null;
+        const candidates = baseName
+          ? [baseName, ...Array.from({ length: 4 }, () => `${baseName}${Math.floor(Math.random() * 10000)}`.slice(0, 32))]
+          : [];
+
+        for (const cand of candidates) {
+          const { error: insertErr } = await supabase.from('profiles').insert([{
+            id: data.user.id,
+            username: cand,
+            plan: 'free',
+            chapters_used: 0,
+            chapters_limit: settings.default_chapters_limit,
+          }]);
+          if (!insertErr) { finalUsername = cand; break; }
+          // 23505 = unique_violation, 22023 = reserved/bad username
+          if (insertErr.code !== '23505' && insertErr.code !== '22023') {
+            console.error('profile insert error:', insertErr);
+            break;
+          }
+        }
+
+        if (!finalUsername) {
+          // Фолбэк: профиль без имени. Юзер проставит его сам.
+          await supabase.from('profiles').insert([{
+            id: data.user.id,
+            username: null,
+            plan: 'free',
+            chapters_used: 0,
+            chapters_limit: settings.default_chapters_limit,
+          }]);
+        }
       }
     }
   }

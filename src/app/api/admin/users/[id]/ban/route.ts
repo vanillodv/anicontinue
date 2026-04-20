@@ -1,4 +1,5 @@
 import { getAdminContext, guardUserTarget, serviceClient } from '@/lib/admin/guard';
+import { logAdminAction } from '@/lib/admin/audit';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface Params { params: Promise<{ id: string }> }
@@ -14,6 +15,8 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   const svc = serviceClient();
 
+  const { data: oldRow } = await svc.from('profiles').select('role').eq('id', id).single();
+
   // Обновляем роль в profiles (главная проверка в приложении)
   const { error: profileError } = await svc
     .from('profiles')
@@ -26,6 +29,15 @@ export async function POST(_req: NextRequest, { params }: Params) {
   try {
     await svc.auth.admin.updateUserById(id, { ban_duration: '876600h' });
   } catch { /* silent — основная блокировка через profiles.role */ }
+
+  await logAdminAction({
+    adminId: auth.ctx.userId,
+    action: 'user.ban',
+    targetType: 'profile',
+    targetId: id,
+    old: oldRow,
+    new: { role: 'banned' },
+  });
 
   return NextResponse.json({ ok: true });
 }
@@ -41,6 +53,8 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
   const svc = serviceClient();
 
+  const { data: oldRow } = await svc.from('profiles').select('role').eq('id', id).single();
+
   const { error: profileError } = await svc
     .from('profiles')
     .update({ role: 'user' })
@@ -52,6 +66,15 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   try {
     await svc.auth.admin.updateUserById(id, { ban_duration: 'none' });
   } catch { /* silent */ }
+
+  await logAdminAction({
+    adminId: auth.ctx.userId,
+    action: 'user.unban',
+    targetType: 'profile',
+    targetId: id,
+    old: oldRow,
+    new: { role: 'user' },
+  });
 
   return NextResponse.json({ ok: true });
 }
