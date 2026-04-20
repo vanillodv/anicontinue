@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { serviceClient } from "@/lib/admin/guard";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, MessageCircle, BookOpen, Sparkles, User } from "lucide-react";
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default async function AnimeChaptersFeed({ animeId, animeName }: Props) {
-  const supabase = await createClient();
+  const supabase = serviceClient(); // обходит RLS для чтения username из profiles
 
   const { data: chapters } = await supabase
     .from("chapters")

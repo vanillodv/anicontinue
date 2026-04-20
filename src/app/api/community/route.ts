@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { serviceClient } from '@/lib/admin/guard';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   const sort = req.nextUrl.searchParams.get('sort') ?? 'new';
-  const supabase = await createClient();
+  const supabase = serviceClient();
 
   const orderColumn = sort === 'popular' ? 'likes_count' : 'created_at';
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { serviceClient } from "@/lib/admin/guard";
 import { Sparkles, BookOpen, Users, Star, ArrowRight, Wand2, Send, Heart, MessageCircle, Zap } from "lucide-react";
 import { proxyImage } from "@/lib/proxyImage";
 
@@ -8,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const supabase = await createClient();
+  const svc = serviceClient(); // обходит RLS для чтения username из profiles
 
   const [
     { data: popularAnime },
@@ -26,7 +28,7 @@ export default async function Home() {
       .select("*", { count: "exact", head: true })
       .eq("is_public", true)
       .eq("is_deleted", false),
-    supabase
+    svc
       .from("chapters")
       .select(`
         id, title, content, likes_count, created_at,
