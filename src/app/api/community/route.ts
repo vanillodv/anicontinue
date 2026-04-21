@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
 
   const orderColumn = sort === 'popular' ? 'likes_count' : 'created_at';
 
+  // Берём больше чем нужно, чтобы потом отфильтровать под разнообразие
   const { data, error } = await supabase
     .from('chapters')
     .select(`
@@ -25,14 +26,36 @@ export async function GET(req: NextRequest) {
     .eq('is_public', true)
     .eq('is_deleted', false)
     .order(orderColumn, { ascending: false })
-    .limit(20);
+    .limit(60);
 
   if (error) {
     console.error('Community feed error:', error);
     return NextResponse.json({ error: 'Failed to fetch community feed' }, { status: 500 });
   }
 
-  const items = (data ?? []).map((chapter: any) => ({
+  // Диверсификация: не больше 2 глав подряд от одного автора или по одному аниме.
+  // Это убирает антидоказательство, когда лента выглядит как моноспектакль.
+  const raw = (data ?? []) as any[];
+  const authorSeen = new Map<string, number>();
+  const animeSeen = new Map<number, number>();
+  const diverse: any[] = [];
+  const rest: any[] = [];
+  for (const ch of raw) {
+    const ac = authorSeen.get(ch.user_id) ?? 0;
+    const nc = animeSeen.get(ch.anime_id) ?? 0;
+    if (ac < 2 && nc < 2) {
+      diverse.push(ch);
+      authorSeen.set(ch.user_id, ac + 1);
+      animeSeen.set(ch.anime_id, nc + 1);
+    } else {
+      rest.push(ch);
+    }
+    if (diverse.length >= 20) break;
+  }
+  // Дополним если разнообразия не хватает
+  const finalList = diverse.concat(rest).slice(0, 20);
+
+  const items = finalList.map((chapter: any) => ({
     id: chapter.id,
     title: chapter.title,
     preview: chapter.content ? chapter.content.replace(/^\s+/, '').replace(/\s+/g, ' ').slice(0, 200) : '',

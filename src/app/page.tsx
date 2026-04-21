@@ -3,6 +3,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { serviceClient } from "@/lib/admin/guard";
 import { proxyImage } from "@/lib/proxyImage";
+import ExamplePreview from "@/components/landing/ExamplePreview";
 
 export const dynamic = 'force-dynamic';
 
@@ -32,17 +33,45 @@ export default async function Home() {
     svc
       .from("chapters")
       .select(`
-        id, title, content, likes_count, created_at,
+        id, title, content, likes_count, created_at, user_id, anime_id,
         anime ( title_ru, poster_url ),
         profiles!chapters_user_id_fkey ( username )
       `)
       .eq("is_public", true)
       .eq("is_deleted", false)
       .order("created_at", { ascending: false })
-      .limit(3),
+      .limit(30),
   ]);
 
   const heroPosters = (popularAnime ?? []).slice(0, 4);
+
+  // Курация «Свежих глав» — берём 3 разные главы: не больше одной на автора
+  // и не больше одной на аниме, чтобы не выглядело антидоказательством
+  // (раньше вся витрина была от одного пользователя по одному тайтлу).
+  const curatedChapters = (() => {
+    const list = (recentChapters as any[]) ?? [];
+    const seenAuthors = new Set<string>();
+    const seenAnime = new Set<number>();
+    const picked: any[] = [];
+    for (const ch of list) {
+      if (picked.length >= 3) break;
+      const author = ch.user_id;
+      const anime = ch.anime_id;
+      if (seenAuthors.has(author)) continue;
+      if (seenAnime.has(anime)) continue;
+      seenAuthors.add(author);
+      seenAnime.add(anime);
+      picked.push(ch);
+    }
+    // Фолбэк: если разнообразия не хватает — добираем любыми свежими
+    if (picked.length < 3) {
+      for (const ch of list) {
+        if (picked.length >= 3) break;
+        if (!picked.includes(ch)) picked.push(ch);
+      }
+    }
+    return picked;
+  })();
 
   return (
     <div style={{ color: "var(--ink)" }}>
@@ -135,28 +164,30 @@ export default async function Home() {
 
           <div
             className="grid ac-animate ac-line-top pt-7"
-            style={{ gridTemplateColumns: "repeat(3, auto)", gap: 48, maxWidth: 560, animationDelay: "0.3s" }}
+            style={{ gridTemplateColumns: "repeat(3, auto)", gap: 48, maxWidth: 620, animationDelay: "0.3s" }}
           >
             <div>
-              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em" }}>
-                {animeCount ?? 0}<span style={{ color: "var(--cinnabar)" }}>+</span>
+              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 40, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                3<span style={{ color: "var(--cinnabar)" }}>/∞</span>
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginTop: 8 }}>
-                аниме в каталоге
+                глав бесплатно
               </div>
             </div>
             <div>
-              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em" }}>
-                {chaptersCount ?? 0}<span style={{ color: "var(--cinnabar)" }}>+</span>
+              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 40, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                ~2k
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginTop: 8 }}>
-                глав написано
+                слов в главе
               </div>
             </div>
             <div>
-              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em" }}>∞</div>
+              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 40, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                30<span style={{ color: "var(--cinnabar)" }}>с</span>
+              </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginTop: 8 }}>
-                сюжетных веток
+                от идеи до главы
               </div>
             </div>
           </div>
@@ -204,7 +235,7 @@ export default async function Home() {
                 {a.poster_url && (
                   <Image
                     src={proxyImage(a.poster_url)!}
-                    alt={a.title_ru || a.title_en || ""}
+                    alt={a.title_ru || a.title_en || "Постер аниме"}
                     fill
                     className="object-cover"
                     style={{ filter: "contrast(1.05) saturate(0.9) brightness(0.92)" }}
@@ -247,6 +278,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── EXAMPLE CHAPTER (интерактивное демо, закрывает страх «а вдруг плохо пишет») ── */}
+      <ExamplePreview />
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
       <section id="how" className="relative" style={{ padding: "120px 44px" }}>
@@ -302,7 +336,7 @@ export default async function Home() {
                 {a.poster_url ? (
                   <Image
                     src={proxyImage(a.poster_url)!}
-                    alt={a.title_ru || ""}
+                    alt={a.title_ru || a.title_en || "Постер аниме"}
                     fill
                     className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.2,0.9,0.25,1)] group-hover:scale-110"
                     style={{ filter: "contrast(1.03) saturate(0.95) brightness(0.95)" }}
@@ -352,7 +386,7 @@ export default async function Home() {
       </section>
 
       {/* ── FRESH CHAPTERS (светлый остров) ──────────────────────────── */}
-      {(recentChapters ?? []).length > 0 && (
+      {curatedChapters.length > 0 && (
         <section
           className="relative"
           style={{ background: "var(--inv-bg)", color: "var(--inv-fg)", padding: "120px 44px" }}
@@ -379,7 +413,7 @@ export default async function Home() {
           </div>
 
           <div className="grid gap-9" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-            {(recentChapters as any[]).map((ch) => {
+            {curatedChapters.map((ch) => {
               const preview = ch.content?.replace(/\n+/g, " ").slice(0, 180).trim();
               return (
                 <Link
@@ -392,7 +426,7 @@ export default async function Home() {
                     {ch.anime?.poster_url && (
                       <Image
                         src={proxyImage(ch.anime.poster_url)!}
-                        alt=""
+                        alt={ch.anime?.title_ru || "Постер аниме"}
                         width={70}
                         height={100}
                         className="w-full h-full object-cover"
@@ -451,30 +485,56 @@ export default async function Home() {
             <Link href="/catalog" className="ac-btn cinnabar">
               Попробовать бесплатно <span className="arr">→</span>
             </Link>
-            <Link href="/pricing" className="ac-btn">Поддержать проект</Link>
           </div>
         </div>
       </section>
 
-      {/* Responsive fallback для hero/секций */}
+      {/* Responsive — breakpoints для hero/секций */}
       <style>{`
+        @media (max-width: 1400px) {
+          /* на 1100-1400px hero всё ещё 2 колонки, но колонка с коллажем уже меньше */
+          main section:first-child { gap: 40px !important; padding-left: 32px !important; padding-right: 32px !important; }
+        }
         @media (max-width: 1100px) {
+          /* tablet → hero в одну колонку, коллаж скрыт (у него .hidden.lg:block) */
           main section:first-child {
             grid-template-columns: 1fr !important;
-            gap: 40px !important;
+            gap: 32px !important;
             padding: 40px 24px 80px !important;
+            min-height: auto !important;
           }
+          main section:first-child h1 { font-size: clamp(44px, 9vw, 88px) !important; }
           main section[id="how"] .grid[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
           main section[id="how"] .grid[style*="repeat(4"] > div { border-bottom: 1px solid var(--line); }
-          main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
+          main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; }
           main section:nth-of-type(4) .grid[style*="repeat(3"] { grid-template-columns: 1fr !important; }
-          main section { padding: 80px 24px !important; }
+          main section { padding: 64px 24px !important; }
+          .ac-sec-num { font-size: 56px !important; }
         }
         @media (max-width: 620px) {
+          /* mobile */
+          main section:first-child { padding: 24px 16px 48px !important; }
+          main section:first-child h1 { font-size: clamp(36px, 10vw, 64px) !important; margin-bottom: 20px !important; }
+          main section:first-child p { font-size: 15px !important; }
+          main section:first-child .grid[style*="repeat(3"] {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 20px !important;
+            max-width: 100% !important;
+          }
           main section[id="how"] .grid[style*="repeat(4"] { grid-template-columns: 1fr !important; }
-          main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
-          main section:first-child .grid[style*="repeat(3"] { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+          main section[id="how"] .grid[style*="repeat(4"] > div { border-right: none !important; }
+          main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+          main section { padding: 48px 16px !important; }
+          .ac-sec-num { font-size: 42px !important; }
+          .ac-sec-title h2 { font-size: clamp(28px, 7vw, 40px) !important; }
+          /* «Свежие главы» светлый остров */
+          main section:nth-of-type(4) { margin: 0 -16px !important; padding: 48px 16px !important; }
+          main section:nth-of-type(4) .grid[style*="auto 1fr auto"] { grid-template-columns: 1fr !important; gap: 16px !important; }
+          /* CTA */
+          main section:last-of-type { padding: 64px 16px !important; }
         }
+        /* Горизонтальный скролл защита */
+        html, body { overflow-x: hidden; }
       `}</style>
     </div>
   );

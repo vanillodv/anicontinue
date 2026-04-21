@@ -35,7 +35,10 @@ async function refundChapter(userId: string) {
   catch (e) { console.error('refund_chapter failed:', e); }
 }
 
-export const maxDuration = 10;
+// 60s хватает с запасом на 3500 токенов при Haiku 4.5 (~100 tok/s = 35s).
+// На Vercel Hobby Edge Functions поддерживают до 300s, стриминг начинает
+// отдавать первые байты за <5s — клиент видит прогресс.
+export const maxDuration = 60;
 export const runtime = 'edge';
 
 const anthropic = new Anthropic({
@@ -174,8 +177,9 @@ export async function POST(req: Request) {
 
     const stream = anthropic.messages.stream({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1200,
-      temperature: 0.8,
+      // 3500 токенов ≈ 1800-2500 слов — полноценная глава вместо куцых 700-900
+      max_tokens: 3500,
+      temperature: 0.85,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     });
