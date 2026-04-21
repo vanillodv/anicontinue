@@ -226,14 +226,29 @@ export default function SceneConstructor({
       clearStageTimers();
       setGenerationStage("error");
       setStatus("error");
-      if (err.message === "LIMIT_REACHED") {
+      const raw = (err?.message || "").trim();
+      // Специальные кейсы с CTA
+      if (raw === "LIMIT_REACHED") {
         setErrorMessage("Вы исчерпали лимит генераций. Поддержите проект чтобы получить больше.");
         setNeedsLogin(true);
-      } else if (err.message === "UNAUTHORIZED") {
+      } else if (raw === "UNAUTHORIZED") {
         setErrorMessage("Войдите в аккаунт чтобы создавать главы.");
         setNeedsLogin(true);
+      } else if (raw === "BANNED") {
+        setErrorMessage("Ваш аккаунт заблокирован. Обратитесь на support@anicontinue.ru.");
+      } else if (raw === "RATE_LIMITED" || /слишком много запросов/i.test(raw)) {
+        setErrorMessage("Слишком много запросов подряд. Подождите минуту и попробуйте снова.");
+      } else if (raw === "ANIME_NOT_FOUND") {
+        setErrorMessage("Аниме не найдено в каталоге. Обновите страницу.");
+      } else if (/overloaded|529/i.test(raw)) {
+        setErrorMessage("AI-сервис временно перегружен. Попробуйте через минуту.");
+      } else if (/timeout|timed out/i.test(raw)) {
+        setErrorMessage("Превышено время ожидания. Попробуйте ещё раз — обычно со второй попытки работает.");
+      } else if (raw && raw !== "Failed to fetch") {
+        // Показываем реальный текст ошибки с сервера — лучше чем generic «попробуйте позже»
+        setErrorMessage(raw.length > 200 ? raw.slice(0, 200) + "…" : raw);
       } else {
-        setErrorMessage("Произошла ошибка при создании истории. Попробуйте позже.");
+        setErrorMessage("Не удалось создать главу. Проверьте соединение и попробуйте ещё раз.");
       }
     }
   };
