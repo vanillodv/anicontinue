@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://anicontinue.vercel.app';
+  // См. robots.ts: используем APP_URL (реально установлена в Vercel), fallback на прод-домен.
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.anicontinue.ru';
   const supabase = await createClient();
 
   const [{ data: anime }, { data: chapters }] = await Promise.all([

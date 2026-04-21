@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Search, Plus, Pencil, Trash2, X, Check, Loader2, Star } from "lucide-react";
 import Image from "next/image";
+import { proxyImage } from "@/lib/proxyImage";
 
 interface AnimeRow {
   id: number;
@@ -158,7 +159,7 @@ export default function AdminAnimePage() {
                 <td className="px-4 py-2">
                   <div className="w-8 h-11 rounded overflow-hidden bg-white/5 relative shrink-0">
                     {a.poster_url
-                      ? <Image src={a.poster_url} alt="" fill className="object-cover" unoptimized />
+                      ? <Image src={proxyImage(a.poster_url)!} alt="" fill className="object-cover" unoptimized />
                       : <div className="w-full h-full" />}
                   </div>
                 </td>

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import AnimeDetailsClient from "./AnimeDetailsClient";
 import AnimeChaptersFeed from "./AnimeChaptersFeed";
+import { proxyImage } from "@/lib/proxyImage";
 
 export const revalidate = 3600;
 
@@ -27,7 +28,8 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
     openGraph: {
       title: `${title} — AniContinue`,
       description: synopsisSnippet,
-      images: anime.poster_url ? [{ url: anime.poster_url, alt: title }] : undefined,
+      // MAL hotlink-режет прямые запросы. Для og:image проксируем через /api/img.
+      images: anime.poster_url ? [{ url: proxyImage(anime.poster_url)!, alt: title }] : undefined,
     },
   };
 }

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ChapterReader from "./ChapterReader";
 import { Chapter, Anime } from "@/types";
+import { proxyImage } from "@/lib/proxyImage";
 
 interface ChapterPageProps {
   params: Promise<{ id: string }>;
@@ -27,7 +28,9 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
     openGraph: {
       title: `${title} · ${animeName}`,
       description: snippet,
-      images: anime?.poster_url ? [{ url: anime.poster_url, alt: animeName }] : undefined,
+      // Жмём через /api/img — MAL hotlink-режет прямые запросы без Referer,
+      // соцсети бы получили 403 и не отрисовали превью.
+      images: anime?.poster_url ? [{ url: proxyImage(anime.poster_url)!, alt: animeName }] : undefined,
     },
   };
 }

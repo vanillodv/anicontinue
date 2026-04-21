@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { User, ArrowRight, Globe, Lock, Star, Heart } from "lucide-react";
 import { Profile, Chapter, Anime } from "@/types";
+import { proxyImage } from "@/lib/proxyImage";
 
 export const metadata: Metadata = {
   title: "Профиль",
@@ -204,7 +205,7 @@ export default async function ProfilePage() {
                   <div className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
                     <div className="relative w-10 h-14 overflow-hidden shrink-0" style={{ borderRadius: 1 }}>
                       {g.posterUrl ? (
-                        <Image src={g.posterUrl} alt={g.title} fill className="object-cover" />
+                        <Image src={proxyImage(g.posterUrl)!} alt={g.title} fill className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--line)", color: "var(--ash)", fontFamily: "var(--font-jp)", fontWeight: 900 }}>
                           続

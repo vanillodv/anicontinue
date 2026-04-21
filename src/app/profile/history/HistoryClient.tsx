@@ -7,6 +7,7 @@ import {
   ArrowRight, Star, Heart, MessageCircle, ChevronDown,
   Globe, Lock, Search, SlidersHorizontal
 } from "lucide-react";
+import { proxyImage } from "@/lib/proxyImage";
 
 interface Chapter {
   id: string;
@@ -75,7 +76,7 @@ function AnimeSection({ group, defaultOpen }: { group: AnimeGroup; defaultOpen: 
       >
         <div className="relative w-11 h-15 overflow-hidden shrink-0" style={{ borderRadius: 1, height: 60 }}>
           {group.posterUrl ? (
-            <Image src={group.posterUrl} alt={group.title} fill className="object-cover" />
+            <Image src={proxyImage(group.posterUrl)!} alt={group.title} fill className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--line)", color: "var(--ash)", fontFamily: "var(--font-jp)", fontWeight: 900 }}>
               続
