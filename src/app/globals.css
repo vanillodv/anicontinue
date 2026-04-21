@@ -226,3 +226,31 @@ body::before {
   transform: translateY(-4px);
   box-shadow: 0 12px 30px -16px rgba(14, 11, 10, 0.35);
 }
+
+/* Строка в таблице/списке с лёгкой подсветкой hover.
+   Для server-компонентов (history-feed в profile, пр.). */
+.ac-row {
+  transition: background 0.2s;
+}
+.ac-row:hover {
+  background: rgba(242, 235, 217, 0.03);
+}
+
+/* Iconic-кнопка со hover-реверсом (cinnabar bg на hover).
+   Используется рядом с .group — появляется при hover родителя. */
+.ac-icon-btn {
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  transition: all 0.2s;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+.ac-icon-btn:hover,
+.group:hover .ac-icon-btn:hover {
+  background: var(--cinnabar);
+  color: #fff;
+  border-color: var(--cinnabar);
+}

@@ -32,24 +32,36 @@ export default async function HistoryPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="min-h-screen bg-[#0D0D1A] py-12">
-      <div className="container mx-auto px-6 max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-3xl font-black text-white">Мои главы</h1>
-            <p className="text-gray-500 text-sm mt-1">Все написанные истории, сгруппированные по аниме</p>
-          </div>
-          <Link
-            href="/profile"
-            className="text-sm text-gray-500 hover:text-[#E8409A] transition-colors"
+    <div style={{ padding: "44px 44px 120px", maxWidth: 1100, margin: "0 auto" }}>
+      <div className="mb-12 flex items-end justify-between flex-wrap gap-4">
+        <div className="ac-sec-title">
+          <div className="kicker">История · History</div>
+          <h1
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontWeight: 400,
+              fontStyle: "italic",
+              fontSize: "clamp(40px, 6vw, 72px)",
+              lineHeight: 0.95,
+              letterSpacing: "-0.025em",
+            }}
           >
-            ← Профиль
-          </Link>
+            Все мои <b style={{ fontStyle: "normal", fontWeight: 900 }}>главы</b>
+          </h1>
+          <p className="mt-2" style={{ fontSize: 14, color: "var(--ash)" }}>
+            Истории, написанные по тайтлам, сгруппированные по аниме.
+          </p>
         </div>
-
-        <HistoryClient chapters={(chapters ?? []) as any} />
+        <Link href="/profile" className="ac-sec-link">← Профиль</Link>
       </div>
-    </main>
+
+      <HistoryClient chapters={(chapters ?? []) as any} />
+
+      <style>{`
+        @media (max-width: 1100px) {
+          main > div { padding: 32px 24px 80px !important; }
+        }
+      `}</style>
+    </div>
   );
 }
