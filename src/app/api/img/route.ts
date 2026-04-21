@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ALLOWED_HOSTS = ['cdn.myanimelist.net', 'cdn.myanimelist.net'];
+const ALLOWED_HOSTS = [
+  'cdn.myanimelist.net',
+  'myanimelist.net',
+  'api-cdn.myanimelist.net',
+  'cdn-us.myanimelist.net',
+];
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
