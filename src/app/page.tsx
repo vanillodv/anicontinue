@@ -107,7 +107,7 @@ export default async function Home() {
         <div className="relative z-[2]">
           <div className="ac-eyebrow mb-9 ac-animate">
             <span className="dot" />
-            <span>Фанфики нового поколения · 続き物語</span>
+            <span>Недосказанное · 続きは君が書く</span>
             <span className="line hidden md:inline-block" />
           </div>
 
@@ -117,18 +117,19 @@ export default async function Home() {
               fontFamily: "var(--font-serif)",
               fontWeight: 400,
               fontStyle: "italic",
-              fontSize: "clamp(56px, 10vw, 150px)",
-              lineHeight: 0.92,
+              fontSize: "clamp(52px, 9.5vw, 140px)",
+              lineHeight: 0.95,
               letterSpacing: "-0.03em",
               marginBottom: 36,
             }}
           >
-            Продолжи<br />
+            Допиши<br />
             <span style={{ fontStyle: "normal", fontWeight: 900, color: "transparent", WebkitTextStroke: "1.5px var(--ink)" }}>
-              своё
-            </span>{" "}
+              то, что канон
+            </span>
+            <br />
             <span style={{ fontStyle: "normal", fontWeight: 900, position: "relative", display: "inline-block" }}>
-              любимое
+              не додал.
               <span
                 aria-hidden
                 style={{
@@ -144,22 +145,22 @@ export default async function Home() {
                 }}
               />
             </span>
-            <br />
-            <span style={{ fontStyle: "normal", fontWeight: 900 }}>аниме.</span>
           </h1>
 
           <p
             className="ac-animate mb-11"
-            style={{ maxWidth: 480, fontSize: 17, lineHeight: 1.55, color: "var(--ash)", animationDelay: "0.1s" }}
+            style={{ maxWidth: 520, fontSize: 17, lineHeight: 1.6, color: "var(--ash)", animationDelay: "0.1s" }}
           >
-            Платформа, где AI становится вашим со-автором. Выбираете тайтл — задаёте направление — получаете главу в атмосфере оригинала, с любимыми персонажами и собственным почерком.
+            Любимая пара, которая так и не призналась. Арка, оборванная на финале.
+            Герой, которому не дали шанса. AI поможет дописать — в атмосфере оригинала,
+            за пару минут, с твоим замыслом.
           </p>
 
           <div className="flex flex-wrap gap-3.5 mb-16 ac-animate" style={{ animationDelay: "0.2s" }}>
             <Link href="/catalog" className="ac-btn primary">
-              Начать бесплатно <span className="arr">→</span>
+              Написать первую главу <span className="arr">→</span>
             </Link>
-            <Link href="/community" className="ac-btn">В сообщество</Link>
+            <Link href="/community" className="ac-btn">Читать сообщество</Link>
           </div>
 
           <div
@@ -288,10 +289,10 @@ export default async function Home() {
 
         <div className="grid ac-line-top" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
           {[
-            { n: "一", title: "Выбери аниме", desc: "Более 100 тайтлов — от классики Гибли до сезонных новинок. Каталог постоянно пополняется." },
-            { n: "二", title: "Задай направление", desc: "Настроение, жанр сцены, герои, место — всё настраивается под твой замысел." },
-            { n: "三", title: "Создаём вместе", desc: "AI пишет главу в тоне оригинала — ты правишь, дополняешь, направляешь сюжет." },
-            { n: "四", title: "Делись с миром", desc: "Публикуй в сообществе, собирай реакции, читай и продолжай чужие истории." },
+            { n: "一", title: "Выбери тайтл",       desc: "Каталог от классики Гибли до сезонных новинок. Любимое аниме, любимая пара, любимый герой." },
+            { n: "二", title: "Задай, чего не хватило", desc: "Романтика, драма, экшн, юмор. Продолжение финала или альтернативная концовка. Свои персонажи — опционально." },
+            { n: "三", title: "Получи главу",        desc: "~2000 слов в тоне оригинала, за 30 секунд. Герои в характере, без клише, без markdown и смайликов." },
+            { n: "四", title: "Читай и делись",      desc: "Оставляй в личной библиотеке или публикуй в сообществе. Подписчики ставят лайки и комментируют." },
           ].map((s, i) => (
             <div
               key={i}
@@ -475,11 +476,12 @@ export default async function Home() {
             ● 3 главы бесплатно · без карты
           </div>
           <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 400, fontStyle: "italic", fontSize: "clamp(48px, 7vw, 96px)", lineHeight: 0.95, letterSpacing: "-0.025em", marginBottom: 28 }}>
-            Готов написать<br />
-            <b style={{ fontStyle: "normal", fontWeight: 900 }}>свою историю?</b>
+            Напиши ту главу,<br />
+            <b style={{ fontStyle: "normal", fontWeight: 900 }}>которую ждал годами.</b>
           </h2>
-          <p style={{ fontSize: 18, lineHeight: 1.55, color: "var(--ash)", maxWidth: 520, margin: "0 auto 40px" }}>
-            Зарегистрируйся и получи три бесплатные генерации прямо сейчас. Без подписки, без кредитной карты — только ты и твоя история.
+          <p style={{ fontSize: 18, lineHeight: 1.55, color: "var(--ash)", maxWidth: 540, margin: "0 auto 40px" }}>
+            Регистрация в одно касание. Три главы бесплатно — проверишь качество,
+            решишь потом. Без карты, без подписки, без «пробного периода на 7 дней».
           </p>
           <div className="flex flex-wrap gap-3.5 justify-center">
             <Link href="/catalog" className="ac-btn cinnabar">
