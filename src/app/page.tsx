@@ -2,14 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { serviceClient } from "@/lib/admin/guard";
-import { Sparkles, BookOpen, Users, Star, ArrowRight, Wand2, Send, Heart, MessageCircle, Zap } from "lucide-react";
 import { proxyImage } from "@/lib/proxyImage";
 
 export const dynamic = 'force-dynamic';
 
+const SEC_NUMS = ["零壱", "零弐", "零参"];
+
 export default async function Home() {
   const supabase = await createClient();
-  const svc = serviceClient(); // обходит RLS для чтения username из profiles
+  const svc = serviceClient();
 
   const [
     { data: popularAnime },
@@ -19,7 +20,7 @@ export default async function Home() {
   ] = await Promise.all([
     supabase
       .from("anime")
-      .select("id, title_ru, title_en, poster_url, score, genres")
+      .select("id, title_ru, title_en, poster_url, score, genres, year, studio")
       .order("score", { ascending: false })
       .limit(8),
     supabase.from("anime").select("*", { count: "exact", head: true }),
@@ -41,242 +42,382 @@ export default async function Home() {
       .limit(3),
   ]);
 
-  const stats = [
-    { value: `${animeCount ?? 0}+`, label: "аниме в каталоге", icon: BookOpen, color: "text-blue-400" },
-    { value: `${chaptersCount ?? 0}+`, label: "глав написано", icon: Sparkles, color: "text-[#E8409A]" },
-    { value: "∞", label: "возможностей", icon: Zap, color: "text-yellow-400" },
-  ];
-
-  const steps = [
-    { icon: BookOpen, title: "Выбери аниме", desc: "Более 100 тайтлов — от классики до новинок сезона" },
-    { icon: Wand2, title: "Задай направление", desc: "Настроение, тип сцены, персонажи — всё под твой замысел" },
-    { icon: Sparkles, title: "Создаём вместе", desc: "AI воплощает твою идею в полноценную фанфик-главу" },
-    { icon: Send, title: "Делись с миром", desc: "Публикуй, собирай лайки и комментарии от сообщества" },
-  ];
+  const heroPosters = (popularAnime ?? []).slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-[#0D0D1A] text-white overflow-x-hidden">
+    <div style={{ color: "var(--ink)" }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        {/* Poster collage background */}
-        <div className="absolute inset-0 flex gap-1 opacity-25 saturate-50 scale-110 blur-[2px] pointer-events-none">
-          {(popularAnime ?? []).map((a, i) => (
-            <div key={a.id} className="flex-1 relative" style={{ transform: `translateY(${i % 2 === 0 ? '-5%' : '5%'})` }}>
-              {a.poster_url && (
-                <Image src={proxyImage(a.poster_url)!} alt="" fill className="object-cover" sizes="200px" />
-              )}
-            </div>
-          ))}
+      <section
+        className="relative grid items-end"
+        style={{
+          padding: "64px 44px 120px",
+          gridTemplateColumns: "minmax(0, 1fr) 420px",
+          gap: 60,
+          minHeight: "calc(100vh - 72px)",
+        }}
+      >
+        {/* Огромный 第壱話 на фоне */}
+        <div
+          className="pointer-events-none absolute hidden lg:block"
+          style={{
+            top: 80,
+            right: 480,
+            fontFamily: "var(--font-jp)",
+            fontWeight: 900,
+            fontSize: "clamp(180px, 28vw, 380px)",
+            lineHeight: 0.85,
+            color: "var(--ink)",
+            opacity: 0.05,
+            letterSpacing: "-0.05em",
+          }}
+        >
+          第 壱 話
         </div>
 
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0D0D1A] via-[#0D0D1A]/85 to-[#0D0D1A]/40 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D1A] via-transparent to-[#0D0D1A]/60 pointer-events-none" />
+        <div className="relative z-[2]">
+          <div className="ac-eyebrow mb-9 ac-animate">
+            <span className="dot" />
+            <span>Фанфики нового поколения · 続き物語</span>
+            <span className="line hidden md:inline-block" />
+          </div>
 
-        {/* Content */}
-        <div className="relative z-10 container mx-auto px-6 py-16 md:py-32 max-w-6xl">
-          <div className="max-w-2xl">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/30 text-[#E8409A] text-sm font-semibold mb-6 md:mb-8">
-              <Sparkles className="w-3.5 h-3.5" />
-              Фанфики нового поколения
+          <h1
+            className="ac-animate"
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontWeight: 400,
+              fontStyle: "italic",
+              fontSize: "clamp(56px, 10vw, 150px)",
+              lineHeight: 0.92,
+              letterSpacing: "-0.03em",
+              marginBottom: 36,
+            }}
+          >
+            Продолжи<br />
+            <span style={{ fontStyle: "normal", fontWeight: 900, color: "transparent", WebkitTextStroke: "1.5px var(--ink)" }}>
+              своё
+            </span>{" "}
+            <span style={{ fontStyle: "normal", fontWeight: 900, position: "relative", display: "inline-block" }}>
+              любимое
+              <span
+                aria-hidden
+                style={{
+                  content: "''",
+                  position: "absolute",
+                  left: -4, right: -4, bottom: 10,
+                  height: 18,
+                  background: "var(--cinnabar)",
+                  zIndex: -1,
+                  opacity: 0.9,
+                  transform: "skewX(-6deg)",
+                  boxShadow: "0 0 24px rgba(232,93,79,0.4)",
+                }}
+              />
+            </span>
+            <br />
+            <span style={{ fontStyle: "normal", fontWeight: 900 }}>аниме.</span>
+          </h1>
+
+          <p
+            className="ac-animate mb-11"
+            style={{ maxWidth: 480, fontSize: 17, lineHeight: 1.55, color: "var(--ash)", animationDelay: "0.1s" }}
+          >
+            Платформа, где AI становится вашим со-автором. Выбираете тайтл — задаёте направление — получаете главу в атмосфере оригинала, с любимыми персонажами и собственным почерком.
+          </p>
+
+          <div className="flex flex-wrap gap-3.5 mb-16 ac-animate" style={{ animationDelay: "0.2s" }}>
+            <Link href="/catalog" className="ac-btn primary">
+              Начать бесплатно <span className="arr">→</span>
+            </Link>
+            <Link href="/community" className="ac-btn">В сообщество</Link>
+          </div>
+
+          <div
+            className="grid ac-animate ac-line-top pt-7"
+            style={{ gridTemplateColumns: "repeat(3, auto)", gap: 48, maxWidth: 560, animationDelay: "0.3s" }}
+          >
+            <div>
+              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                {animeCount ?? 0}<span style={{ color: "var(--cinnabar)" }}>+</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginTop: 8 }}>
+                аниме в каталоге
+              </div>
             </div>
-
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-black leading-none mb-5 md:mb-6 tracking-tight">
-              Продолжи<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8409A] to-[#ff6eb4]">
-                своё аниме
-              </span>
-            </h1>
-
-            <p className="text-base md:text-xl text-gray-300 leading-relaxed mb-8 md:mb-10 max-w-lg">
-              Создавай фанфик-главы вместе с AI — в атмосфере оригинала, с любимыми персонажами, за считанные секунды.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/catalog"
-                className="inline-flex items-center justify-center gap-2 bg-[#E8409A] hover:bg-[#d13589] text-white font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 shadow-2xl shadow-[#E8409A]/30 text-lg"
-              >
-                <Sparkles className="w-5 h-5" />
-                Начать бесплатно
-              </Link>
-              <Link
-                href="/community"
-                className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/15 text-white font-bold py-4 px-8 rounded-2xl transition-all text-lg"
-              >
-                <Users className="w-5 h-5" />
-                Сообщество
-              </Link>
+            <div>
+              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                {chaptersCount ?? 0}<span style={{ color: "var(--cinnabar)" }}>+</span>
+              </div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginTop: 8 }}>
+                глав написано
+              </div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em" }}>∞</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginTop: 8 }}>
+                сюжетных веток
+              </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* ── STATS ────────────────────────────────────────────────────── */}
-      <section className="border-y border-white/5 bg-[#12122A]/60 backdrop-blur-sm">
-        <div className="container mx-auto px-6 max-w-6xl">
-          <div className="grid grid-cols-3 divide-x divide-white/5">
-            {stats.map(({ value, label, icon: Icon, color }) => (
-              <div key={label} className="py-5 md:py-8 px-2 sm:px-6 text-center">
-                <Icon className={`w-5 h-5 md:w-6 md:h-6 ${color} mx-auto mb-2 md:mb-3 opacity-80`} />
-                <div className={`text-2xl md:text-4xl font-black ${color} mb-0.5 md:mb-1`}>{value}</div>
-                <div className="text-gray-500 text-xs md:text-sm leading-tight">{label}</div>
-              </div>
-            ))}
+        {/* Poster collage справа */}
+        <div className="relative hidden lg:block" style={{ height: 640 }}>
+          <div
+            className="absolute"
+            style={{
+              left: -30, top: "50%", transform: "translateY(-50%)",
+              writingMode: "vertical-rl", textOrientation: "mixed",
+              fontFamily: "var(--font-jp)", fontWeight: 700, fontSize: 14,
+              letterSpacing: "0.3em", color: "var(--ash)",
+            }}
+          >
+            第一話 · ハジマリ
+          </div>
+
+          {heroPosters.map((a, i) => {
+            const positions: Array<{ width: number; height: number; top?: number; left?: number; right?: number; bottom?: number; deg: number; z: number }> = [
+              { width: 280, height: 400, top: 40, left: 40, deg: -5, z: 2 },
+              { width: 260, height: 370, top: 20, right: 20, deg: 4, z: 3 },
+              { width: 220, height: 310, bottom: 40, left: 20, deg: 6, z: 4 },
+              { width: 200, height: 280, bottom: 10, right: 60, deg: -3, z: 1 },
+            ];
+            const p = positions[i];
+            if (!p) return null;
+            const { deg, z, ...rest } = p;
+            return (
+              <Link
+                key={a.id}
+                href={`/anime/${a.id}`}
+                className="absolute overflow-hidden transition-transform duration-700 ease-[cubic-bezier(0.2,0.9,0.25,1)] hover:rotate-0 hover:scale-105"
+                style={{
+                  ...rest,
+                  borderRadius: 2,
+                  boxShadow: "0 30px 60px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(242,235,217,0.08)",
+                  transform: `rotate(${deg}deg)`,
+                  zIndex: z,
+                  animation: `ac-rise-in 1.1s cubic-bezier(0.2,0.9,0.25,1) both`,
+                  animationDelay: `${0.15 + i * 0.15}s`,
+                }}
+              >
+                {a.poster_url && (
+                  <Image
+                    src={proxyImage(a.poster_url)!}
+                    alt={a.title_ru || a.title_en || ""}
+                    fill
+                    className="object-cover"
+                    style={{ filter: "contrast(1.05) saturate(0.9) brightness(0.92)" }}
+                    sizes="400px"
+                  />
+                )}
+                <div
+                  className="absolute left-3 right-3 bottom-2.5 flex justify-between items-end"
+                  style={{ color: "#fff", fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}
+                >
+                  <span>{a.title_en || a.title_ru}</span>
+                  {a.score && (
+                    <span style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 900, color: "var(--gold)" }}>
+                      {Number(a.score).toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+
+          {/* Печать */}
+          <div
+            className="absolute"
+            style={{
+              top: -10, right: -20, width: 110, height: 110, borderRadius: "50%",
+              background: "var(--cinnabar)", color: "#fff",
+              display: "grid", placeItems: "center", textAlign: "center",
+              fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 14, lineHeight: 1.25,
+              transform: "rotate(12deg)",
+              boxShadow: "0 10px 30px -5px rgba(232,93,79,0.6), 0 0 40px -10px rgba(232,93,79,0.5)",
+              zIndex: 6, letterSpacing: "0.05em",
+            }}
+          >
+            <span className="relative">続<br />作</span>
+            <span
+              className="absolute pointer-events-none"
+              style={{ inset: 6, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.45)" }}
+            />
           </div>
         </div>
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section className="py-14 md:py-24 container mx-auto px-6 max-w-6xl">
-        <div className="text-center mb-10 md:mb-16">
-          <h2 className="text-3xl md:text-5xl font-black mb-3 md:mb-4">Как это работает</h2>
-          <p className="text-gray-400 text-base md:text-lg">Четыре шага до готовой главы</p>
-        </div>
+      <section id="how" className="relative" style={{ padding: "120px 44px" }}>
+        <SectionHead num={SEC_NUMS[0]} kicker="01 · Process" title={<>Четыре шага — <b>одна глава</b></>} />
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {steps.map(({ icon: Icon, title, desc }, i) => (
-            <div key={title} className="relative group">
-              {/* Connector line */}
-              {i < steps.length - 1 && (
-                <div className="hidden md:block absolute top-8 left-1/2 w-full h-px bg-gradient-to-r from-[#E8409A]/30 to-transparent z-0" />
-              )}
-              <div className="relative z-10 bg-[#1A1A2E] border border-white/5 group-hover:border-[#E8409A]/30 rounded-2xl p-6 text-center transition-all duration-300 h-full">
-                <div className="w-14 h-14 rounded-2xl bg-[#E8409A]/10 border border-[#E8409A]/20 flex items-center justify-center mx-auto mb-4 group-hover:bg-[#E8409A]/20 transition-all">
-                  <Icon className="w-6 h-6 text-[#E8409A]" />
-                </div>
-                <div className="text-xs font-bold text-[#E8409A]/60 uppercase tracking-widest mb-2">Шаг {i + 1}</div>
-                <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+        <div className="grid ac-line-top" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+          {[
+            { n: "一", title: "Выбери аниме", desc: "Более 100 тайтлов — от классики Гибли до сезонных новинок. Каталог постоянно пополняется." },
+            { n: "二", title: "Задай направление", desc: "Настроение, жанр сцены, герои, место — всё настраивается под твой замысел." },
+            { n: "三", title: "Создаём вместе", desc: "AI пишет главу в тоне оригинала — ты правишь, дополняешь, направляешь сюжет." },
+            { n: "四", title: "Делись с миром", desc: "Публикуй в сообществе, собирай реакции, читай и продолжай чужие истории." },
+          ].map((s, i) => (
+            <div
+              key={i}
+              className="relative transition-colors duration-300"
+              style={{ padding: "44px 28px 60px", borderRight: i < 3 ? "1px solid var(--line)" : "none" }}
+            >
+              <div className="flex items-center gap-2.5" style={{ fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 20, color: "var(--cinnabar)", marginBottom: 180 }}>
+                <span>Шаг 0{i + 1}</span>
+                <span className="flex-1 h-px" style={{ background: "var(--line-strong)" }} />
               </div>
+              <div
+                className="absolute top-20 right-7 pointer-events-none"
+                style={{ fontSize: 54, opacity: 0.1, fontFamily: "var(--font-jp)", fontWeight: 900, color: "var(--ink)" }}
+              >
+                {s.n}
+              </div>
+              <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 28, lineHeight: 1.05, marginBottom: 14, letterSpacing: "-0.01em", color: "var(--ink)" }}>
+                {s.title}
+              </h3>
+              <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ash)" }}>{s.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── POPULAR ANIME ────────────────────────────────────────────── */}
-      <section className="py-10 md:py-16 bg-[#0A0A18]">
-        <div className="container mx-auto px-6 max-w-6xl">
-          <div className="flex items-center justify-between mb-6 md:mb-10">
-            <div>
-              <h2 className="text-2xl md:text-4xl font-black">Популярные аниме</h2>
-              <p className="text-gray-500 text-sm mt-1">Самые рейтинговые тайтлы каталога</p>
-            </div>
-            <Link
-              href="/catalog"
-              className="flex items-center gap-2 text-[#E8409A] hover:text-[#ff6eb4] font-semibold transition-colors group"
-            >
-              Весь каталог
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
+      <section className="relative" style={{ padding: "120px 44px" }}>
+        <SectionHead
+          num={SEC_NUMS[1]}
+          kicker="02 · Catalog"
+          title={<>Популярные <b>тайтлы</b></>}
+          link={{ href: "/catalog", label: "Весь каталог →" }}
+        />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
-            {(popularAnime ?? []).map((anime) => (
-              <Link
-                key={anime.id}
-                href={`/anime/${anime.id}`}
-                className="group relative"
+        <div className="grid gap-7" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+          {(popularAnime ?? []).map((a, i) => (
+            <Link key={a.id} href={`/anime/${a.id}`} className="group relative">
+              <div
+                className="relative overflow-hidden"
+                style={{ aspectRatio: "2/3", borderRadius: 2, boxShadow: "0 10px 30px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(242,235,217,0.06)" }}
               >
-                <div className="aspect-[2/3] relative rounded-xl overflow-hidden shadow-lg border border-white/5 group-hover:border-[#E8409A]/40 transition-all duration-300">
-                  {anime.poster_url ? (
-                    <Image
-                      src={proxyImage(anime.poster_url)!}
-                      alt={anime.title_ru || ""}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 12vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-white/5 flex items-center justify-center">
-                      <BookOpen className="w-8 h-8 text-gray-600" />
-                    </div>
-                  )}
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <p className="text-white text-xs font-bold leading-tight line-clamp-2">
-                      {anime.title_ru || anime.title_en}
-                    </p>
-                    {anime.score && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                        <span className="text-yellow-400 text-xs font-bold">{anime.score}</span>
-                      </div>
-                    )}
+                {a.poster_url ? (
+                  <Image
+                    src={proxyImage(a.poster_url)!}
+                    alt={a.title_ru || ""}
+                    fill
+                    className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.2,0.9,0.25,1)] group-hover:scale-110"
+                    style={{ filter: "contrast(1.03) saturate(0.95) brightness(0.95)" }}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 320px"
+                  />
+                ) : (
+                  <div className="w-full h-full" style={{ background: "var(--paper-2)" }} />
+                )}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{ background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.9) 100%)" }}
+                />
+                {a.score && (
+                  <div
+                    className="absolute top-3.5 left-3.5 z-[2] flex items-center gap-1.5"
+                    style={{ background: "var(--ink)", color: "var(--paper)", padding: "4px 10px", borderRadius: 1, fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 15, letterSpacing: "-0.02em" }}
+                  >
+                    <span style={{ color: "var(--cinnabar)" }}>★</span>
+                    {Number(a.score).toFixed(1)}
                   </div>
+                )}
+                <div
+                  className="absolute top-3.5 right-4 z-[2]"
+                  style={{ fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 40, color: "#fff", lineHeight: 1, textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
+                >
+                  {String(i + 1).padStart(2, "0")}
                 </div>
-              </Link>
-            ))}
-          </div>
+                <div
+                  className="absolute left-4 right-4 bottom-4 z-[2]"
+                  style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: 17, lineHeight: 1.15, color: "#fff", letterSpacing: "-0.01em" }}
+                >
+                  {a.title_ru || a.title_en}
+                </div>
+              </div>
+              <div
+                className="mt-3.5 flex justify-between items-center"
+                style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}
+              >
+                <span>{[a.studio, a.year].filter(Boolean).join(" · ") || "Anime"}</span>
+                <span className="opacity-0 -translate-x-1.5 transition-all group-hover:opacity-100 group-hover:translate-x-0" style={{ color: "var(--ink)" }}>
+                  Открыть →
+                </span>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* ── RECENT CHAPTERS ──────────────────────────────────────────── */}
+      {/* ── FRESH CHAPTERS (светлый остров) ──────────────────────────── */}
       {(recentChapters ?? []).length > 0 && (
-        <section className="py-14 md:py-24 container mx-auto px-6 max-w-6xl">
-          <div className="flex items-center justify-between mb-6 md:mb-10">
+        <section
+          className="relative"
+          style={{ background: "var(--inv-bg)", color: "var(--inv-fg)", padding: "120px 44px" }}
+        >
+          <div className="grid grid-cols-[auto_1fr_auto] gap-8 items-end mb-16">
+            <div style={{ fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 80, lineHeight: 0.9, color: "var(--cinnabar-deep)", letterSpacing: "-0.04em" }}>
+              {SEC_NUMS[2]}
+            </div>
             <div>
-              <h2 className="text-2xl md:text-4xl font-black">Свежие главы</h2>
-              <p className="text-gray-500 text-sm mt-1">Последние работы от сообщества</p>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--inv-ash)", marginBottom: 14 }}>
+                03 · Community
+              </div>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 400, fontStyle: "italic", fontSize: "clamp(40px, 5vw, 72px)", lineHeight: 1, letterSpacing: "-0.02em", color: "var(--inv-fg)" }}>
+                Свежие <b style={{ fontStyle: "normal", fontWeight: 900 }}>главы</b>
+              </h2>
             </div>
             <Link
               href="/community"
-              className="flex items-center gap-2 text-[#E8409A] hover:text-[#ff6eb4] font-semibold transition-colors group"
+              className="pb-1 transition-colors"
+              style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--inv-fg)", borderBottom: "1px solid var(--inv-fg)" }}
             >
-              Все главы
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              Все главы →
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid gap-9" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
             {(recentChapters as any[]).map((ch) => {
-              const preview = ch.content?.replace(/\n+/g, " ").slice(0, 140).trim();
+              const preview = ch.content?.replace(/\n+/g, " ").slice(0, 180).trim();
               return (
                 <Link
                   key={ch.id}
                   href={`/chapter/${ch.id}`}
-                  className="group bg-[#1A1A2E] border border-white/5 hover:border-[#E8409A]/30 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col"
+                  className="group relative grid gap-5 transition-all"
+                  style={{ gridTemplateColumns: "70px 1fr", background: "var(--inv-card)", border: "1px solid var(--inv-line)", padding: 28 }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#fbf7ec"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 30px -16px rgba(14,11,10,0.35)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "var(--inv-card)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
                 >
-                  {/* Anime poster banner */}
-                  {ch.anime?.poster_url && (
-                    <div className="relative h-28 overflow-hidden">
+                  <div className="w-[70px] h-[100px] overflow-hidden" style={{ borderRadius: 1, background: "#e7dfcf" }}>
+                    {ch.anime?.poster_url && (
                       <Image
                         src={proxyImage(ch.anime.poster_url)!}
                         alt=""
-                        fill
-                        className="object-cover object-top opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-                        sizes="400px"
+                        width={70}
+                        height={100}
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E] to-transparent" />
-                      <div className="absolute bottom-2 left-4">
-                        <span className="text-xs font-bold text-[#E8409A] bg-[#1A1A2E]/80 px-2 py-0.5 rounded-full">
-                          {ch.anime.title_ru}
-                        </span>
-                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--cinnabar-deep)", marginBottom: 10 }}>
+                      {ch.anime?.title_ru}
                     </div>
-                  )}
-
-                  <div className="p-5 flex flex-col flex-1 gap-3">
-                    <h3 className="text-white font-bold leading-snug group-hover:text-[#E8409A] transition-colors line-clamp-2">
+                    <h4 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: 22, lineHeight: 1.15, marginBottom: 12, letterSpacing: "-0.01em", color: "var(--inv-fg)" }}>
                       {ch.title || "Без названия"}
-                    </h3>
+                    </h4>
                     {preview && (
-                      <p className="text-gray-400 text-sm leading-relaxed line-clamp-3 flex-1">
+                      <p
+                        style={{ fontSize: 13, lineHeight: 1.55, color: "var(--inv-ash)", marginBottom: 18, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                      >
                         {preview}…
                       </p>
                     )}
-                    <div className="flex items-center justify-between text-xs text-gray-600 pt-2 border-t border-white/5">
-                      <span>{(ch.profiles as any)?.username ?? "Аноним"}</span>
-                      <div className="flex items-center gap-3">
-                        {ch.likes_count > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Heart className="w-3 h-3 text-red-400" />{ch.likes_count}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex justify-between items-center" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--inv-ash)" }}>
+                      <span style={{ color: "var(--inv-fg)" }}>@{(ch.profiles as any)?.username ?? "Аноним"}</span>
+                      <span>{Math.max(1, Math.round((ch.content?.length || 0) / 1000))} мин чтения</span>
                     </div>
                   </div>
                 </Link>
@@ -286,44 +427,80 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ── BOTTOM CTA ───────────────────────────────────────────────── */}
-      <section className="py-12 md:py-24 px-4 md:px-6">
-        <div className="container mx-auto max-w-4xl">
-          <div className="relative bg-gradient-to-br from-[#E8409A]/20 via-[#1A1A2E] to-[#7B61FF]/20 border border-[#E8409A]/20 rounded-3xl p-6 sm:p-8 md:p-12 text-center overflow-hidden">
-            {/* Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#E8409A]/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/30 text-[#E8409A] text-sm font-semibold mb-6">
-                <Star className="w-3.5 h-3.5 fill-[#E8409A]" />
-                3 главы бесплатно
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black mb-3 md:mb-4">
-                Готов написать свою историю?
-              </h2>
-              <p className="text-gray-400 text-sm md:text-lg mb-6 md:mb-8 max-w-xl mx-auto">
-                Зарегистрируйся и получи 3 бесплатные генерации прямо сейчас — без карты, без подписки.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/catalog"
-                  className="inline-flex items-center justify-center gap-2 bg-[#E8409A] hover:bg-[#d13589] text-white font-bold py-4 px-10 rounded-2xl transition-all transform hover:scale-105 shadow-2xl shadow-[#E8409A]/30 text-lg"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  Попробовать бесплатно
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-4 px-10 rounded-2xl transition-all text-lg"
-                >
-                  Поддержать проект
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-              </div>
-            </div>
+      {/* ── CTA ──────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden text-center" style={{ padding: "140px 44px" }}>
+        <div
+          className="absolute inset-0 grid place-items-center pointer-events-none"
+          style={{ fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: "clamp(280px, 40vw, 580px)", color: "var(--cinnabar)", opacity: 0.09, lineHeight: 0.85, letterSpacing: "-0.05em" }}
+        >
+          続
+        </div>
+        <div className="relative z-[2] max-w-[780px] mx-auto">
+          <div
+            className="inline-flex gap-2.5 items-center mb-8"
+            style={{ padding: "8px 16px", background: "var(--cinnabar)", color: "#fff", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", boxShadow: "0 0 30px rgba(232,93,79,0.35)" }}
+          >
+            ● 3 главы бесплатно · без карты
+          </div>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 400, fontStyle: "italic", fontSize: "clamp(48px, 7vw, 96px)", lineHeight: 0.95, letterSpacing: "-0.025em", marginBottom: 28 }}>
+            Готов написать<br />
+            <b style={{ fontStyle: "normal", fontWeight: 900 }}>свою историю?</b>
+          </h2>
+          <p style={{ fontSize: 18, lineHeight: 1.55, color: "var(--ash)", maxWidth: 520, margin: "0 auto 40px" }}>
+            Зарегистрируйся и получи три бесплатные генерации прямо сейчас. Без подписки, без кредитной карты — только ты и твоя история.
+          </p>
+          <div className="flex flex-wrap gap-3.5 justify-center">
+            <Link href="/catalog" className="ac-btn cinnabar">
+              Попробовать бесплатно <span className="arr">→</span>
+            </Link>
+            <Link href="/pricing" className="ac-btn">Поддержать проект</Link>
           </div>
         </div>
       </section>
 
+      {/* Responsive fallback для hero/секций */}
+      <style>{`
+        @media (max-width: 1100px) {
+          main section:first-child {
+            grid-template-columns: 1fr !important;
+            gap: 40px !important;
+            padding: 40px 24px 80px !important;
+          }
+          main section[id="how"] .grid[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
+          main section[id="how"] .grid[style*="repeat(4"] > div { border-bottom: 1px solid var(--line); }
+          main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
+          main section:nth-of-type(4) .grid[style*="repeat(3"] { grid-template-columns: 1fr !important; }
+          main section { padding: 80px 24px !important; }
+        }
+        @media (max-width: 620px) {
+          main section[id="how"] .grid[style*="repeat(4"] { grid-template-columns: 1fr !important; }
+          main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
+          main section:first-child .grid[style*="repeat(3"] { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function SectionHead({
+  num, kicker, title, link,
+}: {
+  num: string;
+  kicker: string;
+  title: React.ReactNode;
+  link?: { href: string; label: string };
+}) {
+  return (
+    <div
+      className="grid gap-7 items-end mb-[70px]"
+      style={{ gridTemplateColumns: "auto 1fr auto" }}
+    >
+      <div className="ac-sec-num">{num}</div>
+      <div className="ac-sec-title">
+        <div className="kicker">{kicker}</div>
+        <h2>{title}</h2>
+      </div>
+      {link ? <Link href={link.href} className="ac-sec-link">{link.label}</Link> : <div />}
     </div>
   );
 }

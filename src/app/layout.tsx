@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope, Playfair_Display, JetBrains_Mono, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,14 +8,38 @@ import { getSiteSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import MaintenancePage from "./maintenance/page";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Основной sans: Manrope (поддержка кириллицы)
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin", "cyrillic"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Serif для заголовков: Playfair Display поддерживает italic и кириллицу.
+// Имя CSS-переменной --font-fraunces оставлено для обратной совместимости.
+const fraunces = Playfair_Display({
+  variable: "--font-fraunces",
+  subsets: ["latin", "cyrillic"],
+  style: ["normal", "italic"],
+  weight: ["400", "500", "700", "900"],
+  display: "swap",
+});
+
+// Моноширинный для eyebrow/kicker
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
+
+// Японский serif для кандзи-акцентов (печати, номера секций)
+const notoJp = Noto_Serif_JP({
+  variable: "--font-noto-jp",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -42,7 +66,6 @@ export default async function RootLayout({
     createClient(),
   ]);
 
-  // Проверяем является ли юзер админом (для обхода maintenance)
   let isAdmin = false;
   if (settings.maintenance_mode) {
     const { data: { user } } = await supabase.auth.getUser();
@@ -56,24 +79,23 @@ export default async function RootLayout({
     }
   }
 
+  const fontVars = `${manrope.variable} ${fraunces.variable} ${jetbrains.variable} ${notoJp.variable}`;
+
   return (
-    <html
-      lang="ru"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-[#0D0D1A] text-white">
+    <html lang="ru" className={`${fontVars} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
         {settings.maintenance_mode && !isAdmin ? (
           <MaintenancePage />
         ) : (
           <>
             <Header />
-            {/* Объявление */}
             {settings.site_notice && (
-              <div className="bg-[#E8409A]/10 border-b border-[#E8409A]/20 text-center py-2 px-4 text-sm text-[#E8409A]">
+              <div className="relative z-20 border-b border-[color:var(--line)] text-center py-2 px-4 text-sm"
+                   style={{ background: "rgba(232,93,79,0.08)", color: "var(--cinnabar)" }}>
                 {settings.site_notice}
               </div>
             )}
-            <main className="flex-grow">
+            <main className="flex-grow relative z-10">
               {children}
             </main>
             <Footer />

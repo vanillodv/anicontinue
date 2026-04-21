@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { User, LogOut, ChevronDown, Shield, X, Sparkles, BookOpen, Send, Eye, Wand2, Menu } from "lucide-react";
+import { User, LogOut, ChevronDown, Shield, X, Menu, BookOpen, Eye, Wand2, Sparkles, Send } from "lucide-react";
 import Image from "next/image";
 
 const NAV_LINKS = [
@@ -23,10 +23,8 @@ export default function Header() {
   const supabase  = createClient();
   const pathname  = usePathname();
 
-  // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  // Lock body scroll when mobile menu open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -64,67 +62,103 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-[#0D0D1A]/90 backdrop-blur-md border-b border-white/5">
-        <div className="container mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between gap-3">
+      <header
+        className="sticky top-0 z-50 w-full ac-line-bottom backdrop-blur-md"
+        style={{ background: "rgba(13, 11, 10, 0.72)" }}
+      >
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-10 px-5 md:px-11 h-14 md:h-[72px]">
 
-          {/* Логотип */}
-          <Link href="/" className="text-lg md:text-xl font-bold text-[#E8409A] hover:opacity-80 transition-opacity shrink-0">
-            🌸 AniContinue
+          {/* Brand */}
+          <Link href="/" className="flex items-center gap-2.5 shrink-0" style={{ fontFamily: "var(--font-serif)", fontWeight: 900 }}>
+            <span className="ac-seal">続</span>
+            <span className="text-[18px] md:text-[20px] tracking-[0.02em]" style={{ color: "var(--ink)" }}>AniContinue</span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
+          <nav className="hidden md:flex items-center gap-7 lg:gap-8 justify-center" style={{ fontFamily: "var(--font-mono)" }}>
             {NAV_LINKS.map(({ href, label }) => (
-              <Link key={href} href={href} className="text-gray-300 hover:text-[#E8409A] transition-colors font-medium text-sm lg:text-base">
+              <Link
+                key={href}
+                href={href}
+                className="relative py-1.5 text-[13px] tracking-[0.08em] uppercase transition-opacity"
+                style={{ color: "var(--ink)", opacity: 0.7 }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "0.7")}
+              >
                 {label}
               </Link>
             ))}
-            <button onClick={() => setHowOpen(true)} className="text-gray-300 hover:text-[#E8409A] transition-colors font-medium text-sm lg:text-base">
+            <button
+              onClick={() => setHowOpen(true)}
+              className="relative py-1.5 text-[13px] tracking-[0.08em] uppercase transition-opacity"
+              style={{ color: "var(--ink)", opacity: 0.7 }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={e => (e.currentTarget.style.opacity = "0.7")}
+            >
               Как работает
             </button>
             {isAdmin && (
-              <Link href="/admin" className="flex items-center gap-1.5 text-yellow-400 hover:text-yellow-300 transition-colors font-medium text-sm">
-                <Shield className="w-4 h-4" /> Админ
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 text-[13px] tracking-[0.08em] uppercase transition-colors"
+                style={{ color: "var(--gold)" }}
+              >
+                <Shield className="w-3.5 h-3.5" /> Админ
               </Link>
             )}
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:gap-2.5">
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 p-1 pl-2 md:pl-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-2 p-1 pl-2 md:pl-3 transition-colors"
+                  style={{ border: "1px solid var(--line-strong)", borderRadius: "2px", background: "transparent" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
-                  <span className="text-sm font-medium text-gray-200 hidden sm:inline max-w-[100px] truncate">
+                  <span className="text-[12px] md:text-[13px] tracking-[0.05em] uppercase hidden sm:inline max-w-[100px] truncate" style={{ color: "var(--ink)", fontFamily: "var(--font-mono)" }}>
                     {user.user_metadata.full_name || user.email?.split("@")[0]}
                   </span>
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden relative border border-[#E8409A]/30 shrink-0">
+                  <div className="w-7 h-7 md:w-8 md:h-8 overflow-hidden relative shrink-0" style={{ borderRadius: "2px", border: "1px solid rgba(232,93,79,0.35)" }}>
                     {user.user_metadata.avatar_url ? (
                       <Image src={user.user_metadata.avatar_url} alt="Avatar" fill className="object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-[#E8409A]/20 flex items-center justify-center text-[#E8409A]">
+                      <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(232,93,79,0.18)", color: "var(--cinnabar)" }}>
                         <User className="w-4 h-4" />
                       </div>
                     )}
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform hidden sm:block ${dropdownOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform hidden sm:block ${dropdownOpen ? "rotate-180" : ""}`} style={{ color: "var(--ash)" }} />
                 </button>
 
                 {dropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-48 bg-[#1A1A2E] border border-white/10 rounded-2xl shadow-2xl py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <Link href="/profile" className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors" onClick={() => setDropdownOpen(false)}>
+                    <div
+                      className="absolute right-0 mt-2 w-52 py-2 z-20 shadow-2xl"
+                      style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)", borderRadius: "2px" }}
+                    >
+                      <Link href="/profile" className="flex items-center gap-3 px-4 py-3 text-[13px] tracking-[0.05em] uppercase transition-colors" style={{ color: "var(--ink)", fontFamily: "var(--font-mono)" }} onClick={() => setDropdownOpen(false)}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
                         <User className="w-4 h-4" /> Профиль
                       </Link>
                       {isAdmin && (
-                        <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-sm text-yellow-400 hover:bg-yellow-500/10 transition-colors" onClick={() => setDropdownOpen(false)}>
+                        <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[13px] tracking-[0.05em] uppercase transition-colors" style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }} onClick={() => setDropdownOpen(false)}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(223,181,94,0.1)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
                           <Shield className="w-4 h-4" /> Админ панель
                         </Link>
                       )}
-                      <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                      <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 text-[13px] tracking-[0.05em] uppercase transition-colors" style={{ color: "var(--cinnabar)", fontFamily: "var(--font-mono)" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(232,93,79,0.1)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
                         <LogOut className="w-4 h-4" /> Выйти
                       </button>
                     </div>
@@ -132,15 +166,19 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link href="/login" className="px-4 md:px-6 py-2 rounded-full border border-white/20 text-[#E8409A] font-semibold hover:bg-white/5 transition-all text-sm">
-                Войти
-              </Link>
+              <>
+                <Link href="/login" className="ac-btn hidden sm:inline-flex">Войти</Link>
+                <Link href="/login" className="ac-btn primary">
+                  Начать <span className="arr">→</span>
+                </Link>
+              </>
             )}
 
-            {/* Hamburger — mobile only */}
+            {/* Hamburger — mobile */}
             <button
               onClick={() => setMobileOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 transition-colors"
+              className="md:hidden p-2 transition-colors"
+              style={{ border: "1px solid var(--line-strong)", borderRadius: "2px", color: "var(--ink)" }}
               aria-label="Открыть меню"
             >
               <Menu className="w-5 h-5" />
@@ -149,46 +187,49 @@ export default function Header() {
         </div>
       </header>
 
-      {/* ── Mobile menu drawer ───────────────────────────── */}
+      {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[60] md:hidden">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-
-          {/* Panel */}
-          <div className="absolute top-0 left-0 right-0 bg-[#0D0D1A] border-b border-white/10 shadow-2xl animate-in slide-in-from-top duration-200">
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 h-14 border-b border-white/5">
-              <Link href="/" className="text-lg font-bold text-[#E8409A]" onClick={() => setMobileOpen(false)}>
-                🌸 AniContinue
+          <div className="absolute inset-0 backdrop-blur-sm" style={{ background: "rgba(0,0,0,0.7)" }} onClick={() => setMobileOpen(false)} />
+          <div className="absolute top-0 left-0 right-0 shadow-2xl" style={{ background: "var(--paper)", borderBottom: "1px solid var(--line-strong)" }}>
+            <div className="flex items-center justify-between px-5 h-14 ac-line-bottom">
+              <Link href="/" className="flex items-center gap-2.5" style={{ fontFamily: "var(--font-serif)", fontWeight: 900 }} onClick={() => setMobileOpen(false)}>
+                <span className="ac-seal">続</span>
+                <span className="text-[18px]" style={{ color: "var(--ink)" }}>AniContinue</span>
               </Link>
-              <button onClick={() => setMobileOpen(false)} className="p-2 text-gray-400 hover:text-white">
+              <button onClick={() => setMobileOpen(false)} className="p-2" style={{ color: "var(--ash)" }}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Links */}
-            <nav className="p-4 space-y-1">
+            <nav className="p-4 space-y-1" style={{ fontFamily: "var(--font-mono)" }}>
               {NAV_LINKS.map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all font-medium text-base"
+                  className="flex items-center gap-3 px-4 py-3.5 text-[13px] tracking-[0.1em] uppercase transition-colors"
+                  style={{ color: "var(--ink)" }}
                   onClick={() => setMobileOpen(false)}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
                   {label}
                 </Link>
               ))}
               <button
                 onClick={() => { setMobileOpen(false); setHowOpen(true); }}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all font-medium text-base text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-[13px] tracking-[0.1em] uppercase text-left transition-colors"
+                style={{ color: "var(--ink)" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 Как работает
               </button>
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-yellow-400 hover:bg-yellow-500/10 transition-all font-medium text-base"
+                  className="flex items-center gap-3 px-4 py-3.5 text-[13px] tracking-[0.1em] uppercase transition-colors"
+                  style={{ color: "var(--gold)" }}
                   onClick={() => setMobileOpen(false)}
                 >
                   <Shield className="w-4 h-4" /> Админ панель
@@ -196,13 +237,12 @@ export default function Header() {
               )}
             </nav>
 
-            {/* User section */}
             {user && (
-              <div className="px-4 pb-4 border-t border-white/5 pt-3 space-y-1">
-                <Link href="/profile" className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:bg-white/5 transition-all" onClick={() => setMobileOpen(false)}>
+              <div className="px-4 pb-5 ac-line-top pt-3 space-y-1" style={{ fontFamily: "var(--font-mono)" }}>
+                <Link href="/profile" className="flex items-center gap-3 px-4 py-3.5 text-[13px] tracking-[0.1em] uppercase transition-colors" style={{ color: "var(--ink)" }} onClick={() => setMobileOpen(false)}>
                   <User className="w-4 h-4" /> Профиль
                 </Link>
-                <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-400 hover:bg-red-500/10 transition-all">
+                <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3.5 text-[13px] tracking-[0.1em] uppercase text-left transition-colors" style={{ color: "var(--cinnabar)" }}>
                   <LogOut className="w-4 h-4" /> Выйти
                 </button>
               </div>
@@ -211,37 +251,49 @@ export default function Header() {
         </div>
       )}
 
-      {/* ── How it works modal ───────────────────────────── */}
+      {/* How it works modal */}
       {howOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setHowOpen(false)}>
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div className="relative w-full max-w-lg bg-[#12122A] border border-white/10 rounded-3xl shadow-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setHowOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+          <div className="absolute inset-0 backdrop-blur-sm" style={{ background: "rgba(0,0,0,0.8)" }} />
+          <div
+            className="relative w-full max-w-lg p-6 md:p-9 max-h-[90vh] overflow-y-auto shadow-2xl"
+            style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)", borderRadius: "2px" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button onClick={() => setHowOpen(false)} className="absolute top-4 right-4 transition-colors" style={{ color: "var(--ash)" }}>
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-xl md:text-2xl font-bold text-white mb-1">Как работает AniContinue</h2>
-            <p className="text-gray-400 text-sm mb-6">5 шагов до готовой главы</p>
+            <div className="ac-eyebrow mb-4"><span className="dot" /><span>01 · PROCESS</span><span className="line" /></div>
+            <h2 className="text-2xl md:text-3xl mb-1" style={{ fontFamily: "var(--font-serif)", fontWeight: 900, color: "var(--ink)" }}>
+              Как работает AniContinue
+            </h2>
+            <p className="text-sm mb-6" style={{ color: "var(--ash)" }}>5 шагов до готовой главы</p>
             <ol className="space-y-4">
               {[
-                { icon: <BookOpen className="w-5 h-5" />, step: "1", title: "Выбери аниме", desc: "Открой Каталог и найди любимое аниме." },
-                { icon: <Eye className="w-5 h-5" />, step: "2", title: "Изучи страницу", desc: "Описание, жанры, рейтинг и главы от других пользователей." },
-                { icon: <Wand2 className="w-5 h-5" />, step: "3", title: "Нажми «Создать главу»", desc: "Укажи направление сюжета, персонажей и тон главы." },
-                { icon: <Sparkles className="w-5 h-5" />, step: "4", title: "Создаём вместе", desc: "AI воплощает твою идею в полноценную фанфик-главу." },
-                { icon: <Send className="w-5 h-5" />, step: "5", title: "Поделись с сообществом", desc: "Публикуй главу, собирай лайки и комментарии." },
+                { icon: <BookOpen className="w-5 h-5" />, step: "一", title: "Выбери аниме", desc: "Открой Каталог и найди любимое аниме." },
+                { icon: <Eye className="w-5 h-5" />, step: "二", title: "Изучи страницу", desc: "Описание, жанры, рейтинг и главы от других пользователей." },
+                { icon: <Wand2 className="w-5 h-5" />, step: "三", title: "Нажми «Создать главу»", desc: "Укажи направление сюжета, персонажей и тон главы." },
+                { icon: <Sparkles className="w-5 h-5" />, step: "四", title: "Создаём вместе", desc: "AI воплощает твою идею в полноценную фанфик-главу." },
+                { icon: <Send className="w-5 h-5" />, step: "五", title: "Поделись с сообществом", desc: "Публикуй главу, собирай лайки и комментарии." },
               ].map(({ icon, step, title, desc }) => (
                 <li key={step} className="flex gap-3 items-start">
-                  <div className="shrink-0 w-9 h-9 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/30 flex items-center justify-center text-[#E8409A]">
-                    {icon}
+                  <div
+                    className="shrink-0 w-10 h-10 flex items-center justify-center"
+                    style={{ background: "rgba(232,93,79,0.12)", border: "1px solid rgba(232,93,79,0.4)", borderRadius: "2px", color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900 }}
+                  >
+                    {step}
                   </div>
                   <div>
-                    <p className="text-white font-semibold leading-tight">{title}</p>
-                    <p className="text-gray-400 text-sm mt-0.5 leading-relaxed">{desc}</p>
+                    <p className="font-semibold leading-tight flex items-center gap-2" style={{ color: "var(--ink)", fontFamily: "var(--font-serif)" }}>
+                      {icon} {title}
+                    </p>
+                    <p className="text-sm mt-0.5 leading-relaxed" style={{ color: "var(--ash)" }}>{desc}</p>
                   </div>
                 </li>
               ))}
             </ol>
-            <button onClick={() => setHowOpen(false)} className="mt-6 w-full bg-[#E8409A] hover:bg-[#d13589] text-white font-semibold py-3 rounded-full transition-colors">
-              Попробовать →
+            <button onClick={() => setHowOpen(false)} className="ac-btn cinnabar mt-7 w-full justify-center">
+              Попробовать <span className="arr">→</span>
             </button>
           </div>
         </div>

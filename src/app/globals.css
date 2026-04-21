@@ -1,26 +1,201 @@
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────────────────────
+   AniContinue — Japanese sumi-e dark palette.
+   Тёмная версия редизайна: глубокий чёрный как тушь,
+   кремовый текст, киноварь для акцентов, золото для рейтингов.
+   ────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper:            #0D0B0A;  /* основной фон — сумми-э */
+  --paper-2:          #151110;  /* карточки/секции */
+  --ink:              #F2EBD9;  /* текст — тёплая рисовая бумага */
+  --cinnabar:         #E85D4F;  /* киноварь — основной акцент */
+  --cinnabar-deep:    #C13E31;
+  --gold:             #DFB55E;
+  --ash:              #8C8378;  /* подзаголовки, мелкий текст */
+  --line:             rgba(242, 235, 217, 0.10);
+  --line-strong:      rgba(242, 235, 217, 0.32);
+
+  /* инверсный блок (светлый остров на тёмном сайте) */
+  --inv-bg:           #EFE7D3;
+  --inv-fg:           #0D0B0A;
+  --inv-card:         #FFFFFF;
+  --inv-ash:          #6B625A;
+  --inv-line:         rgba(14, 11, 10, 0.12);
+
+  /* совместимость со старым кодом */
+  --background:       var(--paper);
+  --foreground:       var(--ink);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background:      var(--background);
+  --color-foreground:      var(--foreground);
+  --color-paper:           var(--paper);
+  --color-paper-2:         var(--paper-2);
+  --color-ink:             var(--ink);
+  --color-cinnabar:        var(--cinnabar);
+  --color-cinnabar-deep:   var(--cinnabar-deep);
+  --color-gold:            var(--gold);
+  --color-ash:             var(--ash);
+  --color-inv-bg:          var(--inv-bg);
+  --color-inv-fg:          var(--inv-fg);
+  --color-inv-card:        var(--inv-card);
+  --color-inv-ash:         var(--inv-ash);
+  --font-sans:             var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif:            var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono:             var(--font-jetbrains), ui-monospace, monospace;
+  --font-jp:               var(--font-noto-jp), var(--font-fraunces), serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(232, 93, 79, 0.10), transparent 60%),
+    radial-gradient(900px 500px at -10% 30%, rgba(223, 181, 94, 0.06), transparent 55%),
+    var(--paper);
+  overflow-x: hidden;
 }
+
+/* Лёгкая зернистость рисовой бумаги поверх фона. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.25;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.88  0 0 0 0 0.82  0 0 0 0.12 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ── утилиты ─────────────────────────────────────────── */
+
+/* Печать-логотип (красный квадрат с кандзи) */
+.ac-seal {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--cinnabar);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-family: var(--font-jp);
+  font-weight: 900;
+  font-size: 16px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  transform: rotate(-4deg);
+  flex-shrink: 0;
+}
+
+/* Бейдж с моноширинным текстом */
+.ac-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+.ac-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cinnabar);
+  box-shadow: 0 0 10px var(--cinnabar);
+  animation: ac-pulse 2s ease-in-out infinite;
+}
+.ac-eyebrow .line {
+  width: 40px;
+  height: 1px;
+  background: var(--line-strong);
+}
+@keyframes ac-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Острая кнопка (вместо rounded-full) */
+.ac-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: 2px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.ac-btn:hover { background: var(--ink); color: var(--paper); }
+.ac-btn.primary { background: var(--ink); color: var(--paper); }
+.ac-btn.primary:hover { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
+.ac-btn.cinnabar { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
+.ac-btn.cinnabar:hover { background: var(--cinnabar-deep); border-color: var(--cinnabar-deep); }
+.ac-btn .arr { display: inline-block; transition: transform 0.3s; }
+.ac-btn:hover .arr { transform: translateX(4px); }
+
+/* Заголовок секции с кандзи-номером */
+.ac-sec-num {
+  font-family: var(--font-jp);
+  font-weight: 900;
+  font-size: 80px;
+  line-height: 0.9;
+  color: var(--cinnabar);
+  letter-spacing: -0.04em;
+}
+.ac-sec-title h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(40px, 5vw, 72px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.ac-sec-title h2 b { font-style: normal; font-weight: 900; }
+.ac-sec-title .kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 14px;
+  display: block;
+}
+.ac-sec-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 4px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.ac-sec-link:hover { color: var(--cinnabar); border-color: var(--cinnabar); }
+
+/* Входные анимации */
+@keyframes ac-rise-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+.ac-animate { animation: ac-rise-in 0.9s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+
+/* Тонкая линия для разделителей, которая не тонет в тёмном фоне */
+.ac-line-top { border-top: 1px solid var(--line-strong); }
+.ac-line-bottom { border-bottom: 1px solid var(--line); }
