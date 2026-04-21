@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight, Star, Heart, MessageCircle, ChevronDown,
-  BookOpen, Globe, Lock, Search, SlidersHorizontal, Sparkles
+  Globe, Lock, Search, SlidersHorizontal
 } from "lucide-react";
 
 interface Chapter {
@@ -50,11 +50,7 @@ const SORTS: { key: SortKey; label: string }[] = [
 ];
 
 function moodLabel(params: any): string | null {
-  const mood = params?.mood;
-  const map: Record<string, string> = {
-    Экшн: "⚔️ Экшн", Драма: "🌧️ Драма", Романтика: "🌸 Романтика", Юмор: "😄 Юмор",
-  };
-  return mood ? (map[mood] ?? mood) : null;
+  return params?.mood ?? null;
 }
 
 function timeAgo(dateStr: string): string {
@@ -70,108 +66,104 @@ function AnimeSection({ group, defaultOpen }: { group: AnimeGroup; defaultOpen: 
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-[#1A1A2E] border border-white/5 rounded-2xl overflow-hidden">
-      {/* Anime header — clickable */}
+    <div style={{ background: "var(--paper-2)", border: "1px solid var(--line)" }}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-4 p-4 hover:bg-white/3 transition-colors text-left"
+        className="w-full flex items-center gap-4 p-4 text-left transition-colors"
+        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(242,235,217,0.03)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
-        {/* Poster */}
-        <div className="relative w-12 h-16 rounded-lg overflow-hidden shrink-0 shadow-lg">
+        <div className="relative w-11 h-15 overflow-hidden shrink-0" style={{ borderRadius: 1, height: 60 }}>
           {group.posterUrl ? (
             <Image src={group.posterUrl} alt={group.title} fill className="object-cover" />
           ) : (
-            <div className="w-full h-full bg-white/10 flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-gray-600" />
+            <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--line)", color: "var(--ash)", fontFamily: "var(--font-jp)", fontWeight: 900 }}>
+              続
             </div>
           )}
         </div>
-
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <Link
             href={`/anime/${group.animeId}`}
             onClick={(e) => e.stopPropagation()}
-            className="text-[#E8409A] text-xs font-bold uppercase tracking-wider hover:underline truncate block"
+            className="truncate block transition-colors"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--cinnabar)" }}
           >
             {group.title}
           </Link>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="text-white font-semibold text-sm">
+            <span style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: 16, color: "var(--ink)" }}>
               {group.chapters.length} {plural(group.chapters.length, "глава", "главы", "глав")}
             </span>
-            <span className="text-gray-600 text-xs">последняя — {timeAgo(group.lastDate)}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em", color: "var(--ash)" }}>
+              последняя — {timeAgo(group.lastDate)}
+            </span>
           </div>
         </div>
-
         <ChevronDown
-          className={`w-5 h-5 text-gray-500 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`w-4 h-4 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          style={{ color: "var(--ash)" }}
         />
       </button>
 
-      {/* Chapters list */}
       {open && (
-        <div className="border-t border-white/5 divide-y divide-white/5">
+        <div className="divide-y" style={{ borderTop: "1px solid var(--line)" }}>
           {group.chapters.map((ch) => {
             const mood = moodLabel(ch.scene_params);
             return (
               <div
                 key={ch.id}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-white/3 transition-colors group"
+                className="flex items-center gap-3 px-4 py-3 group transition-colors"
+                style={{ borderTop: "1px solid var(--line)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(242,235,217,0.03)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                {/* Status dot */}
-                <div className="shrink-0 mt-0.5">
-                  {ch.is_public ? (
-                    <Globe className="w-3.5 h-3.5 text-green-400" />
-                  ) : (
-                    <Lock className="w-3.5 h-3.5 text-gray-600" />
-                  )}
+                <div className="shrink-0" style={{ color: ch.is_public ? "#86EFAC" : "var(--ash)" }}>
+                  {ch.is_public ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                 </div>
-
-                {/* Main */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">
+                  <p className="truncate" style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: 15, color: "var(--ink)" }}>
                     {ch.title || "Без названия"}
                   </p>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className="text-gray-600 text-xs">{timeAgo(ch.created_at)}</span>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em", color: "var(--ash)" }}>
+                    <span>{timeAgo(ch.created_at)}</span>
                     {mood && (
-                      <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
+                      <span style={{ border: "1px solid var(--line-strong)", padding: "1px 6px", textTransform: "uppercase", letterSpacing: "0.12em" }}>
                         {mood}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-3 shrink-0" style={{ fontFamily: "var(--font-mono)", fontSize: 10 }}>
                   {ch.rating != null && (
-                    <div className="flex items-center gap-1 text-xs text-yellow-400">
-                      <Star className="w-3 h-3 fill-yellow-400" />
+                    <div className="flex items-center gap-1" style={{ color: "var(--gold)" }}>
+                      <Star className="w-3 h-3" style={{ fill: "var(--gold)" }} />
                       {ch.rating}
                     </div>
                   )}
                   {ch.likes_count > 0 && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Heart className="w-3 h-3 text-red-400" />
+                    <div className="flex items-center gap-1" style={{ color: "var(--cinnabar)" }}>
+                      <Heart className="w-3 h-3" />
                       {ch.likes_count}
                     </div>
                   )}
                   {(ch.comments_count ?? 0) > 0 && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <MessageCircle className="w-3 h-3 text-[#E8409A]" />
+                    <div className="flex items-center gap-1" style={{ color: "var(--ash)" }}>
+                      <MessageCircle className="w-3 h-3" />
                       {ch.comments_count}
                     </div>
                   )}
                 </div>
 
-                {/* Read button */}
                 <Link
                   href={`/chapter/${ch.id}`}
-                  className="shrink-0 p-2 rounded-lg bg-white/5 hover:bg-[#E8409A] text-white transition-all opacity-0 group-hover:opacity-100"
-                  title="Читать"
+                  className="shrink-0 p-2 opacity-0 group-hover:opacity-100 transition-all"
+                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--cinnabar)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "var(--cinnabar)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--ink)"; e.currentTarget.style.borderColor = "var(--line-strong)"; }}
                 >
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             );
@@ -188,7 +180,6 @@ export default function HistoryClient({ chapters }: { chapters: Chapter[] }) {
   const [query, setQuery]   = useState("");
   const [showSort, setShowSort] = useState(false);
 
-  // Filter chapters
   const filtered = useMemo(() => {
     let list = chapters;
     if (filter === "public")  list = list.filter((c) => c.is_public);
@@ -205,7 +196,6 @@ export default function HistoryClient({ chapters }: { chapters: Chapter[] }) {
     return list;
   }, [chapters, filter, query]);
 
-  // Group by anime
   const groups = useMemo<AnimeGroup[]>(() => {
     const map = new Map<number, AnimeGroup>();
     for (const ch of filtered) {
@@ -226,7 +216,6 @@ export default function HistoryClient({ chapters }: { chapters: Chapter[] }) {
 
     const list = Array.from(map.values());
 
-    // Sort groups
     if (sort === "date")  list.sort((a, b) => b.lastDate.localeCompare(a.lastDate));
     if (sort === "anime") list.sort((a, b) => a.title.localeCompare(b.title, "ru"));
     if (sort === "likes") {
@@ -240,79 +229,129 @@ export default function HistoryClient({ chapters }: { chapters: Chapter[] }) {
     return list;
   }, [filtered, sort]);
 
-  // Summary stats
   const totalLikes    = chapters.reduce((s, c) => s + c.likes_count, 0);
   const totalPublic   = chapters.filter((c) => c.is_public).length;
   const animeCount    = new Set(chapters.map((c) => c.anime?.id)).size;
 
   return (
     <div>
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 mb-10" style={{ border: "1px solid var(--line-strong)" }}>
         {[
-          { label: "Всего глав",    value: chapters.length,  color: "text-[#E8409A]" },
-          { label: "Аниме",         value: animeCount,        color: "text-purple-400" },
-          { label: "Публичных",     value: totalPublic,       color: "text-green-400"  },
-          { label: "Лайков всего",  value: totalLikes,        color: "text-red-400"    },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-[#1A1A2E] border border-white/5 rounded-2xl px-5 py-4 text-center">
-            <div className={`text-2xl font-black ${color}`}>{value}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+          { label: "Всего глав",    value: chapters.length },
+          { label: "Аниме",         value: animeCount,      accent: "cinnabar" },
+          { label: "Публичных",     value: totalPublic,     accent: "green" },
+          { label: "Лайков всего",  value: totalLikes,      accent: "gold" },
+        ].map(({ label, value, accent }, i) => (
+          <div
+            key={label}
+            className="px-5 py-4"
+            style={{
+              background: "var(--paper-2)",
+              borderRight: i < 3 ? "1px solid var(--line)" : "none",
+              borderBottom: i < 2 && i > -1 ? "none" : undefined,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontWeight: 900,
+                fontSize: 28,
+                letterSpacing: "-0.02em",
+                color:
+                  accent === "cinnabar" ? "var(--cinnabar)" :
+                  accent === "gold" ? "var(--gold)" :
+                  accent === "green" ? "#86EFAC" : "var(--ink)",
+              }}
+            >
+              {value}
+            </div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginTop: 4 }}>
+              {label}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--ash)" }} />
           <input
             type="text"
             placeholder="Поиск по названию или аниме…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-[#1A1A2E] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#E8409A]/50 transition-colors"
+            className="w-full py-2.5 pl-10 pr-4 focus:outline-none"
+            style={{
+              background: "transparent",
+              border: "1px solid var(--line-strong)",
+              borderRadius: 2,
+              color: "var(--ink)",
+              fontFamily: "var(--font-mono)",
+              fontSize: 12,
+              letterSpacing: "0.1em",
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--cinnabar)")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--line-strong)")}
           />
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-1 bg-[#1A1A2E] border border-white/10 rounded-xl p-1">
+        <div className="flex gap-1 p-1" style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)", borderRadius: 2 }}>
           {FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                filter === f.key
-                  ? "bg-[#E8409A] text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className="px-3 py-1.5 transition-all"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                background: filter === f.key ? "var(--ink)" : "transparent",
+                color: filter === f.key ? "var(--paper)" : "var(--ink)",
+                borderRadius: 1,
+              }}
             >
               {f.label}
             </button>
           ))}
         </div>
 
-        {/* Sort */}
         <div className="relative">
           <button
             onClick={() => setShowSort((v) => !v)}
-            className="flex items-center gap-2 bg-[#1A1A2E] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-300 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 transition-colors"
+            style={{
+              background: "transparent",
+              border: "1px solid var(--line-strong)",
+              borderRadius: 2,
+              color: "var(--ink)",
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal className="w-3.5 h-3.5" />
             {SORTS.find((s) => s.key === sort)?.label}
           </button>
           {showSort && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowSort(false)} />
-              <div className="absolute right-0 top-full mt-1 bg-[#12122A] border border-white/10 rounded-xl shadow-2xl py-1 z-20 min-w-[140px]">
+              <div className="absolute right-0 top-full mt-1 py-1 z-20 min-w-[160px]" style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)" }}>
                 {SORTS.map((s) => (
                   <button
                     key={s.key}
                     onClick={() => { setSort(s.key); setShowSort(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      sort === s.key ? "text-[#E8409A]" : "text-gray-300 hover:text-white hover:bg-white/5"
-                    }`}
+                    className="w-full text-left px-4 py-2 transition-colors"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 11,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: sort === s.key ? "var(--cinnabar)" : "var(--ink)",
+                    }}
                   >
                     {s.label}
                   </button>
@@ -323,27 +362,39 @@ export default function HistoryClient({ chapters }: { chapters: Chapter[] }) {
         </div>
       </div>
 
-      {/* Empty state */}
+      {/* Empty */}
       {groups.length === 0 && (
-        <div className="py-24 flex flex-col items-center text-center gap-5 bg-[#1A1A2E] border border-dashed border-white/10 rounded-3xl">
-          <div className="w-16 h-16 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/20 flex items-center justify-center">
-            <Sparkles className="w-7 h-7 text-[#E8409A]" />
+        <div
+          className="py-24 flex flex-col items-center text-center gap-5"
+          style={{ background: "var(--paper-2)", border: "1px dashed var(--line-strong)" }}
+        >
+          <div
+            className="w-14 h-14 flex items-center justify-center"
+            style={{ background: "rgba(232,93,79,0.1)", border: "1px solid rgba(232,93,79,0.35)", color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 26 }}
+          >
+            続
           </div>
           {query || filter !== "all" ? (
             <>
-              <p className="text-white font-semibold">Ничего не найдено</p>
-              <p className="text-gray-500 text-sm">Попробуйте изменить фильтры или поисковый запрос</p>
-              <button onClick={() => { setQuery(""); setFilter("all"); }} className="text-sm text-[#E8409A] hover:underline">
+              <p style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 20, color: "var(--ink)" }}>Ничего не найдено</p>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ash)" }}>
+                Попробуйте изменить фильтры или поисковый запрос
+              </p>
+              <button
+                onClick={() => { setQuery(""); setFilter("all"); }}
+                className="underline"
+                style={{ color: "var(--cinnabar)", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" }}
+              >
                 Сбросить фильтры
               </button>
             </>
           ) : (
             <>
-              <p className="text-white font-semibold">Глав пока нет</p>
-              <p className="text-gray-500 text-sm">Выберите аниме в каталоге и создайте первую главу</p>
-              <Link href="/catalog" className="px-6 py-2.5 bg-[#E8409A] hover:bg-[#d13589] text-white text-sm font-bold rounded-full transition-all">
-                В каталог
-              </Link>
+              <p style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 20, color: "var(--ink)" }}>Глав пока нет</p>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ash)" }}>
+                Выберите аниме в каталоге и создайте первую главу
+              </p>
+              <Link href="/catalog" className="ac-btn cinnabar">В каталог <span className="arr">→</span></Link>
             </>
           )}
         </div>
