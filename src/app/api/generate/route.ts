@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     const result = generateSchema.safeParse(body);
     if (!result.success) {
       console.error('Validation failed:', result.error.format());
+      await logGenError(null, body?.animeId ?? null, 'invalid_input', JSON.stringify(result.error.flatten().fieldErrors).slice(0, 400));
       return NextResponse.json({ error: 'INVALID_INPUT', details: result.error.format() }, { status: 400 });
     }
 
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      await logGenError(null, null, 'auth_error', authError?.message || 'no user');
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
@@ -101,6 +103,12 @@ export async function POST(req: Request) {
     ]);
 
     if (userOk === false || ipOk === false) {
+      await logGenError(
+        user.id,
+        params.animeId,
+        'rate_limited',
+        `userOk=${userOk} ipOk=${ipOk} ip=${ip}`
+      );
       return NextResponse.json(
         { error: 'RATE_LIMITED', message: 'Слишком много запросов. Подождите минуту.' },
         { status: 429 }
@@ -114,6 +122,7 @@ export async function POST(req: Request) {
 
     if (rpcError) {
       console.error('consume_chapter error:', rpcError);
+      await logGenError(user.id, params.animeId, 'db_error', `consume_chapter: ${rpcError.message || rpcError.code || JSON.stringify(rpcError)}`);
       return NextResponse.json({ error: 'DB_ERROR' }, { status: 500 });
     }
 
@@ -126,8 +135,15 @@ export async function POST(req: Request) {
         .single();
 
       if (profile?.role === 'banned') {
+        await logGenError(user.id, params.animeId, 'banned', `role=banned`);
         return NextResponse.json({ error: 'BANNED', message: 'Ваш аккаунт заблокирован.' }, { status: 403 });
       }
+      await logGenError(
+        user.id,
+        params.animeId,
+        'limit_reached',
+        `used=${profile?.chapters_used} limit=${profile?.chapters_limit}`
+      );
       return NextResponse.json({ error: 'LIMIT_REACHED' }, { status: 403 });
     }
 
@@ -153,6 +169,7 @@ export async function POST(req: Request) {
 
     if (animeError || !anime) {
       console.error('Anime fetch error:', animeError);
+      await logGenError(user.id, params.animeId, 'anime_not_found', animeError?.message || `id=${params.animeId}`);
       await refundChapter(user.id);
       consumedUserId = null;
       return NextResponse.json({ error: 'ANIME_NOT_FOUND' }, { status: 404 });
