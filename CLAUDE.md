@@ -3,12 +3,16 @@
 # AniContinue — Project Memory
 
 ## Стек
-- **Frontend/Backend**: Next.js 15 App Router (TypeScript)
+- **Frontend/Backend**: Next.js 16 App Router (TypeScript) — **не 15**, см. AGENTS.md
 - **БД + Auth**: Supabase (PostgreSQL + RLS + Auth)
-- **AI**: Anthropic Claude (streaming через Edge Runtime)
-- **Деплой**: Vercel (auto-deploy из GitHub)
+- **AI**: Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`), streaming через Edge Runtime
+- **Деплой**: Vercel (auto-deploy из GitHub, ветка main)
 - **Домен**: www.anicontinue.ru (DNS через Vercel nameservers)
 - **Репозиторий**: github.com/vanillodv/anicontinue
+
+### Next.js 16 breaking changes (важно!)
+- **Middleware → Proxy**: используется `src/proxy.ts`, НЕ `middleware.ts`. Наличие обоих файлов одновременно = build fail.
+- Перед правками нестандартных API Next.js читать `node_modules/next/dist/docs/` — поведение отличается от Next 15.
 
 ## Архитектура
 
@@ -92,7 +96,17 @@ id, user_id, anime_id, tokens_used, cost_usd, created_at
 | 001-008 | ✅ выполнены | Базовая схема, RLS, лайки, аналитика |
 | 012_site_settings.sql | ✅ выполнена | Настройки сайта |
 | 013_generation_grants.sql | ✅ выполнена | История начислений |
-| 014_generation_errors.sql | ⚠️ уточнить | Лог ошибок генерации |
+| 014_generation_errors.sql | ✅ выполнена | Лог ошибок генерации |
+| 015_security_hardening.sql | ✅ выполнена | Trigger `prevent_privilege_escalation`, RPC `consume_chapter`, `refund_chapter`, `apply_payment`, таблица `rate_limits` + RPC `check_rate_limit` |
+| 016_security_hardening_v2.sql | ✅ выполнена | auth.uid check в consume_chapter, RLS на payment_logs, trigger `validate_username`, RPC `log_admin_action` |
+| 017_content_fixes.sql | ✅ выполнена | Орфография title_ru (Твоё/Унесённые — ё, а не е) |
+| 018_better_prompt.sql | ✅ выполнена | ai_prompts v2.0-anti-cliche |
+| 019_prompt_v3_multi_fewshot.sql | ✅ выполнена | v3.0 с 3 few-shot примерами (drama AoT / romance Your Name / action HxH). Активация: `update ai_prompts set is_active = (version = '3.0-multi-fewshot')` |
+| 020_curated_prompts_top10.sql | ⏳ ожидает применения user | `prompt_template` для топ-10: Эдвард не высокий, Санджи не бьёт женщин, Ушио ≠ Ушуу |
+| 021_humanize_seed_data.sql | ⏳ ожидает применения user | Русификация ников 10 seed-авторов (Аки, ОТП навсегда, Тоторовна, Полуночник, Кёко-сан, Фонарщик, Рина К., Цукина, Отаку 2099, Канонист) + рандом `created_at` глав по последним 45 дням |
+
+### Как применять миграции
+Supabase Dashboard → SQL Editor → вставить содержимое файла → Run. В PowerShell/bash НЕ запускать.
 
 ## Подключённые фичи
 
@@ -115,6 +129,28 @@ id, user_id, anime_id, tokens_used, cost_usd, created_at
 
 ### Начисление генераций
 - `POST /api/admin/users/[id]/grant` — увеличивает `chapters_limit`, логирует в `generation_grants`
+
+### AI-промпт (src/lib/prompts/master.ts)
+- Активная версия: **v3.0-multi-fewshot** (миграция 019). 3 few-shot примера разных жанров.
+- `anime.prompt_template` — курированные знания о тайтле (характер героев, тон, запреты). Заполнено для топ-10 (миграция 020). Вшивается в system prompt блоком `КУРИРОВАННЫЕ ЗНАНИЯ О ТАЙТЛЕ`.
+- Формат ответа — XML: `<title>...</title><content>...</content><summary>...`
+- max_tokens: **3500** в /api/generate (не 1200 — иначе глава обрывается). maxDuration: **60** (не 10).
+- При парсинге XML — толерантный: если `</content>` отсутствует, брать до `<summary>` или до конца.
+
+### Скрипты наполнения контентом (`scripts/`)
+| Скрипт | Что делает |
+|--------|-----------|
+| `import-anime-from-jikan.mjs` | 10 страниц × 25 = до 250 тайтлов с Jikan API. **В БД уже: 244.** Retry с backoff (Jikan из РФ падает), 15s timeout, валидация service_role JWT (150+ символов, regex `^eyJ[A-Za-z0-9_\-.]{150,}$`). |
+| `translate-titles-with-llm.mjs` | Claude Haiku переводит `title_ru` батчами по 20. **Переведено: 168.** Официальные названия (Атака Титанов, Унесённые призраками, Твоё имя) + буква «ё». Стоимость ~$0.004 за 100 тайтлов. |
+| `seed-community-chapters.mjs` | 10 demo-авторов × 30 глав в `/community`. Email-паттерн `seed.*@anicontinue-demo.local`. max_tokens: **5000** (иначе XML обрезается), retry 2 попытки на короткий контент. **Сгенерировано: 29+ глав.** |
+
+**Запуск скриптов (из корня репо):**
+```powershell
+$env:NEXT_PUBLIC_SUPABASE_URL="..."
+$env:SUPABASE_SERVICE_ROLE_KEY="eyJhbGci..."  # полный JWT 200+ символов из Vercel
+$env:ANTHROPIC_API_KEY="sk-ant-api03-..."     # полный ключ 100+ символов
+node scripts/<script>.mjs
+```
 
 ## Админ панель (`/admin`)
 Роли: `admin`, `super_admin` — проверяется через `requireAdmin()` / `requireAdminPage()`
@@ -166,3 +202,51 @@ id, user_id, anime_id, tokens_used, cost_usd, created_at
 ### Профили создаются в двух местах
 1. `src/app/auth/callback/route.ts` — для OAuth (Google)
 2. Supabase trigger или ручное создание — для email/password (нужно проверить)
+
+## Дизайн / CSS
+
+### Сумиэ-тема (японский ч/б + киноварь)
+CSS-переменные (в `globals.css`): `--paper`, `--paper-2`, `--ink`, `--cinnabar` (#E85D4F), `--gold` (#DFB55E), `--ash`, `--line`, `--line-strong`.
+
+Утилиты: `.ac-seal`, `.ac-eyebrow`, `.ac-btn`, `.ac-sec-num`, `.ac-card`, `.ac-card-inv`, `.ac-row`, `.ac-icon-btn`, `.legal-doc`.
+
+### Шрифты (`src/app/layout.tsx`)
+- `--font-serif` = **Playfair Display** (italic + cyrillic). **НЕ Fraunces** — Fraunces не поддерживает кириллицу, next/font падал при build. CSS-переменная называется `--font-fraunces` по историческим причинам, но внутри Playfair.
+- `--font-mono` = JetBrains Mono
+- `--font-jp` = Noto Serif JP (для kanji/акцентов)
+- `--font-sans` = Manrope
+
+## Критические уроки
+
+### ⚠️ `onMouseEnter`/`onMouseLeave` в Server Components = 500
+Next.js 16 не терпит inline-event handlers в server components. Симптом: SSR 500 по всему сайту.
+- **Решение**: либо `"use client"` в компоненте, либо заменить hover на CSS-классы (`.ac-card`, `.ac-card-inv`).
+- **Затронуто**: `Footer.tsx` → `"use client"`; `page.tsx`, `AnimeChaptersFeed.tsx` → CSS hover.
+
+### ⚠️ Edge Runtime + max_tokens
+`/api/generate` на Edge. Claude Haiku 4.5 при `max_tokens: 1200` **обрывает главу** → пользователь видит только первый абзац. Минимум **3500** для /api/generate, **5000** для seed-скрипта.
+Также: `maxDuration: 60` обязательно, дефолтные 10s не хватает.
+
+### ⚠️ RLS на profiles в JOIN
+Любое место, где мы показываем username чужих пользователей → `serviceClient()`. Иначе JOIN вернёт null для всех чужих профилей.
+
+### ⚠️ Прямой push в main из worktree
+Ветка worktree `claude/*` tracked на `origin/main`. Для деплоя на Vercel:
+```bash
+git push origin HEAD:main
+```
+Это не force push — ветка отделена от main без дивергенции.
+
+## Deferred (отложено на неопределённый срок)
+По решению user'а отложены:
+- **YooKassa** — интеграция оплаты
+- **Самозанятость** — оформление ИП/самозанятого
+- **Subscription** — месячная подписка
+Текущая модель монетизации: **Boosty** (ручное начисление через `/admin/users/[id]/grant` после доната). Страница `/pricing` — только CTA на Boosty + FAQ, без карточек сумм/тарифов.
+
+## История деплоев (последние ключевые)
+- `2770c71` pricing: убрать блок «Ориентировочные суммы» с 3 карточками
+- `b548b88` migration 021: русификация seed-никнеймов + рандом created_at
+- `878f86d` seed-script: max_tokens 3500→5000 + толерантный парсер + retry
+- `56c5911` script: seed-community-chapters — 10 demo-авторов × 30 глав
+- `b628f9c` script: автоперевод title_ru через Claude Haiku
