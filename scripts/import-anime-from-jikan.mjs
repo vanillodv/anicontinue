@@ -79,12 +79,24 @@ async function fetchExistingIds() {
   return new Set(rows.map(r => r.id));
 }
 
-async function fetchJikanPage(page) {
+// Retry с back-off. Jikan из РФ иногда роняется (terminated/fetch failed).
+async function fetchJikanPage(page, attempt = 1) {
   const url = `${JIKAN}/top/anime?page=${page}&type=tv&filter=bypopularity`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Jikan ${res.status} for page ${page}`);
-  const data = await res.json();
-  return data.data || [];
+  try {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(15000), // 15s на запрос
+      headers: { "User-Agent": "AniContinue-Import/1.0" },
+    });
+    if (!res.ok) throw new Error(`Jikan HTTP ${res.status}`);
+    const data = await res.json();
+    return data.data || [];
+  } catch (err) {
+    if (attempt >= 4) throw err; // 4 попытки (1 + 3 retry)
+    const delay = 2000 * attempt; // 2s, 4s, 6s
+    console.log(`    ↻ retry ${attempt}/3 через ${delay}ms (${err.message})`);
+    await sleep(delay);
+    return fetchJikanPage(page, attempt + 1);
+  }
 }
 
 function mapJikan(a) {
