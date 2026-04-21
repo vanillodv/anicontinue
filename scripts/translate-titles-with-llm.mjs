@@ -32,12 +32,16 @@ if (!ANTHROPIC_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error("⨯ Нужны env: ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
   process.exit(1);
 }
-if (!/^sk-ant-/.test(ANTHROPIC_API_KEY)) {
-  console.error("⨯ ANTHROPIC_API_KEY не похож на ключ Anthropic (должен начинаться с sk-ant-)");
+if (!/^sk-ant-[A-Za-z0-9_\-]{50,}$/.test(ANTHROPIC_API_KEY)) {
+  console.error("⨯ ANTHROPIC_API_KEY не валиден.");
+  console.error("  Реальный ключ: sk-ant-api03-XXXXXX... (длиной ~100 символов)");
+  console.error("  Возьмите из Vercel → Settings → Env Variables → ANTHROPIC_API_KEY → Decrypt");
   process.exit(1);
 }
-if (!/^eyJ/.test(SUPABASE_SERVICE_KEY)) {
-  console.error("⨯ SUPABASE_SERVICE_ROLE_KEY не похож на JWT");
+if (!/^eyJ[A-Za-z0-9_\-.]{150,}$/.test(SUPABASE_SERVICE_KEY)) {
+  console.error("⨯ SUPABASE_SERVICE_ROLE_KEY не валиден.");
+  console.error("  Реальный ключ: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs... (~200+ символов)");
+  console.error("  Возьмите из Vercel → Settings → Env Variables → SUPABASE_SERVICE_ROLE_KEY → Decrypt");
   process.exit(1);
 }
 

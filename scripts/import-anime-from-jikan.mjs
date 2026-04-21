@@ -37,12 +37,11 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   process.exit(1);
 }
 
-// Ранняя валидация: service_role key — это JWT, должен начинаться с eyJ.
-if (!/^eyJ[A-Za-z0-9_\-.]{30,}$/.test(SUPABASE_SERVICE_KEY)) {
-  console.error("⨯ SUPABASE_SERVICE_ROLE_KEY не похож на JWT.");
-  console.error("  Скопируйте значение из Vercel → Settings → Env Variables");
-  console.error("  (или из Supabase Dashboard → Project Settings → API → service_role).");
-  console.error("  Ключ должен начинаться на 'eyJhbGc...' и быть длиной ~200+ символов.");
+// Ранняя валидация: service_role key — JWT длиной 200+ символов.
+if (!/^eyJ[A-Za-z0-9_\-.]{150,}$/.test(SUPABASE_SERVICE_KEY)) {
+  console.error("⨯ SUPABASE_SERVICE_ROLE_KEY не валиден (слишком короткий или не похож на JWT).");
+  console.error("  Реальный ключ: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs... (~200+ символов)");
+  console.error("  Возьмите из Vercel → Settings → Env Variables → SUPABASE_SERVICE_ROLE_KEY → Decrypt");
   process.exit(1);
 }
 
