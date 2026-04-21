@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Star, Calendar, Building2, Layers, Sparkles, RotateCcw, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, Home, LayoutGrid } from "lucide-react";
 import { translateGenre } from "@/lib/genres";
 import { Anime } from "@/types";
 import SceneConstructor from "@/components/reader/SceneConstructor";
@@ -10,7 +11,7 @@ import { proxyImage } from "@/lib/proxyImage";
 
 interface AnimeDetailsClientProps {
   anime: Anime;
-  lastChapter: { id: string, title: string | null } | null;
+  lastChapter: { id: string; title: string | null } | null;
 }
 
 export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsClientProps) {
@@ -23,82 +24,186 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
   };
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
-      <div className="flex flex-col lg:flex-row gap-6 md:gap-12">
-        <div className="w-full lg:w-1/3 shrink-0">
-          <div className="relative aspect-[2/3] w-full max-w-xs mx-auto lg:max-w-none rounded-3xl overflow-hidden shadow-2xl border border-white/5">
+    <div style={{ padding: "44px 44px 64px", maxWidth: 1400, margin: "0 auto" }}>
+
+      {/* Breadcrumbs */}
+      <nav
+        className="flex items-center gap-2 mb-10 overflow-x-auto whitespace-nowrap pb-2"
+        style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}
+      >
+        <Link href="/" className="flex items-center gap-1 transition-colors" style={{ color: "var(--ash)" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "var(--cinnabar)")}
+          onMouseLeave={e => (e.currentTarget.style.color = "var(--ash)")}
+        >
+          <Home className="w-3 h-3" /> Главная
+        </Link>
+        <ChevronRight className="w-3 h-3" />
+        <Link href="/catalog" className="flex items-center gap-1 transition-colors" style={{ color: "var(--ash)" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "var(--cinnabar)")}
+          onMouseLeave={e => (e.currentTarget.style.color = "var(--ash)")}
+        >
+          <LayoutGrid className="w-3 h-3" /> Каталог
+        </Link>
+        <ChevronRight className="w-3 h-3" />
+        <span style={{ color: "var(--ink)" }} className="truncate">
+          {anime.title_ru || anime.title_en}
+        </span>
+      </nav>
+
+      <div className="grid gap-10 lg:gap-16" style={{ gridTemplateColumns: "minmax(0, 1fr) 2fr" }}>
+
+        {/* Poster */}
+        <div className="w-full max-w-sm mx-auto lg:max-w-none">
+          <div
+            className="relative aspect-[2/3] w-full overflow-hidden"
+            style={{
+              borderRadius: 2,
+              boxShadow: "0 30px 60px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(242,235,217,0.08)",
+            }}
+          >
             {anime.poster_url && (
               <Image
                 src={proxyImage(anime.poster_url)!}
                 alt={anime.title_ru || ""}
                 fill
                 className="object-cover"
+                style={{ filter: "contrast(1.05) saturate(0.9) brightness(0.92)" }}
                 priority
               />
             )}
+            {anime.score && (
+              <div
+                className="absolute top-4 left-4 flex items-center gap-1.5 z-[2]"
+                style={{
+                  background: "var(--ink)",
+                  color: "var(--paper)",
+                  padding: "5px 12px",
+                  borderRadius: 1,
+                  fontFamily: "var(--font-serif)",
+                  fontWeight: 900,
+                  fontSize: 17,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                <span style={{ color: "var(--cinnabar)" }}>★</span>
+                {Number(anime.score).toFixed(1)}
+              </div>
+            )}
           </div>
-          <p className="mt-2 text-center text-[10px] text-gray-700 leading-relaxed px-1">
-            {anime.studio ? `© ${anime.studio}. ` : ""}Изображение предоставлено MyAnimeList.
-            Все права на аниме принадлежат их правообладателям.
+          <p
+            className="mt-3 text-center leading-relaxed px-1"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)", opacity: 0.6 }}
+          >
+            {anime.studio ? `© ${anime.studio}. ` : ""}MyAnimeList imagery · Rights reserved
           </p>
         </div>
 
+        {/* Info */}
         <div className="flex flex-col gap-8">
-          <div className="space-y-4">
-            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white">{anime.title_ru || anime.title_en}</h1>
-            <div className="flex flex-wrap gap-2">
-              {Array.isArray(anime.genres) && anime.genres.map((genre: string) => (
-                <span key={genre} className="px-3 py-1 bg-[#E8409A]/10 text-[#E8409A] rounded-full text-sm font-medium border border-[#E8409A]/20">{translateGenre(genre)}</span>
-              ))}
+          <div>
+            <div className="ac-eyebrow mb-6">
+              <span className="dot" />
+              <span>{anime.year || "—"} · {anime.studio || "Anime"}</span>
+              <span className="line" />
             </div>
+
+            <h1
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontWeight: 400,
+                fontStyle: "italic",
+                fontSize: "clamp(36px, 5.5vw, 80px)",
+                lineHeight: 0.95,
+                letterSpacing: "-0.025em",
+                color: "var(--ink)",
+                marginBottom: 18,
+              }}
+            >
+              {anime.title_ru || anime.title_en}
+            </h1>
+
+            {anime.title_en && anime.title_ru && (
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}>
+                {anime.title_en}
+              </p>
+            )}
+
+            {Array.isArray(anime.genres) && anime.genres.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-5">
+                {anime.genres.map((genre: string) => (
+                  <span
+                    key={genre}
+                    style={{
+                      padding: "4px 10px",
+                      border: "1px solid var(--line-strong)",
+                      borderRadius: 1,
+                      color: "var(--ink)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {translateGenre(genre)}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/5 rounded-lg text-yellow-400"><Star className="w-5 h-5 fill-yellow-400" /></div>
-              <div><div className="text-xs text-gray-500 uppercase">Рейтинг</div><div className="font-bold">{anime.score || "N/A"}</div></div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/5 rounded-lg text-blue-400"><Calendar className="w-5 h-5" /></div>
-              <div><div className="text-xs text-gray-500 uppercase">Год</div><div className="font-bold">{anime.year || "N/A"}</div></div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/5 rounded-lg text-purple-400"><Building2 className="w-5 h-5" /></div>
-              <div><div className="text-xs text-gray-500 uppercase">Студия</div><div className="font-bold truncate max-w-[100px]">{anime.studio || "N/A"}</div></div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/5 rounded-lg text-green-400"><Layers className="w-5 h-5" /></div>
-              <div><div className="text-xs text-gray-500 uppercase">Серии</div><div className="font-bold">{anime.episodes || "N/A"}</div></div>
-            </div>
+          {/* Stats row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 ac-line-top ac-line-bottom">
+            {[
+              { label: "Рейтинг", value: anime.score ? Number(anime.score).toFixed(1) : "—", accent: "gold" },
+              { label: "Год", value: anime.year || "—" },
+              { label: "Студия", value: anime.studio || "—" },
+              { label: "Серии", value: anime.episodes || "—" },
+            ].map(({ label, value, accent }) => (
+              <div key={label}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)", marginBottom: 6 }}>
+                  {label}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontWeight: 900,
+                    fontSize: 26,
+                    letterSpacing: "-0.02em",
+                    color: accent === "gold" ? "var(--gold)" : "var(--ink)",
+                  }}
+                >
+                  {value}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-300 uppercase tracking-wider">Описание</h2>
-            <p className="text-gray-400 leading-relaxed text-base md:text-lg">{anime.synopsis}</p>
-          </div>
+          {/* Synopsis */}
+          {anime.synopsis && (
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ash)", marginBottom: 14 }}>
+                Описание
+              </div>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, lineHeight: 1.7, color: "var(--ink)", opacity: 0.85 }}>
+                {anime.synopsis}
+              </p>
+            </div>
+          )}
 
-          <div className="pt-4 md:pt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
+          {/* CTA */}
+          <div className="pt-4 flex flex-wrap gap-3">
             {lastChapter ? (
               <>
-                <button
-                  onClick={() => handleStart(true)}
-                  className="bg-[#E8409A] hover:bg-[#d13589] text-white text-base md:text-xl font-bold py-4 md:py-5 px-6 md:px-10 rounded-2xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-105 flex items-center justify-center gap-3"
-                >
-                  Продолжить историю <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
+                <button onClick={() => handleStart(true)} className="ac-btn cinnabar">
+                  Продолжить историю <span className="arr">→</span>
                 </button>
-                <button
-                  onClick={() => handleStart(false)}
-                  className="bg-white/5 hover:bg-white/10 text-white text-base md:text-lg font-bold py-4 md:py-5 px-6 md:px-10 rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-3"
-                >
-                  <RotateCcw className="w-4 h-4 md:w-5 md:h-5" /> Начать заново
+                <button onClick={() => handleStart(false)} className="ac-btn">
+                  Начать заново
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => handleStart(false)}
-                className="bg-[#E8409A] hover:bg-[#d13589] text-white text-base md:text-xl font-bold py-4 md:py-5 px-8 md:px-12 rounded-2xl shadow-lg shadow-[#E8409A]/20 transition-all transform hover:scale-105 flex items-center justify-center gap-3"
-              >
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6" /> Создать первую главу
+              <button onClick={() => handleStart(false)} className="ac-btn cinnabar">
+                Создать первую главу <span className="arr">→</span>
               </button>
             )}
           </div>
@@ -113,6 +218,15 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
         onClose={() => setIsModalOpen(false)}
         initialContinuePrevious={continuePrevious}
       />
+
+      <style>{`
+        @media (max-width: 1024px) {
+          [data-anime-grid] { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 1100px) {
+          main > div { padding: 32px 24px 64px !important; }
+        }
+      `}</style>
     </div>
   );
 }

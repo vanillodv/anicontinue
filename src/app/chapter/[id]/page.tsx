@@ -35,11 +35,9 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
   const typedAnime = (chapter as any).anime as Pick<Anime, 'id' | 'title_ru' | 'title_en' | 'poster_url'>;
 
   return (
-    <main className="min-h-screen bg-[#0D0D1A]">
-      <ChapterReader 
-        chapter={typedChapter} 
-        anime={typedAnime} 
-      />
-    </main>
+    <ChapterReader
+      chapter={typedChapter}
+      anime={typedAnime}
+    />
   );
 }

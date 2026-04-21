@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, Heart, ChevronRight, Home, LayoutGrid, Sparkles, ArrowLeft } from "lucide-react";
+import { Star, Heart, ChevronRight, Home, LayoutGrid, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Chapter, Anime } from "@/types";
@@ -9,7 +9,7 @@ import CommentsSection from "@/components/chapter/CommentsSection";
 
 interface ChapterReaderProps {
   chapter: Chapter;
-  anime: Pick<Anime, 'id' | 'title_ru' | 'title_en' | 'poster_url'>;
+  anime: Pick<Anime, "id" | "title_ru" | "title_en" | "poster_url">;
 }
 
 export default function ChapterReader({ chapter, anime }: ChapterReaderProps) {
@@ -39,13 +39,13 @@ export default function ChapterReader({ chapter, anime }: ChapterReaderProps) {
     setIsRating(true);
     try {
       await fetch(`/api/chapter/${chapter.id}/rate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: value }),
       });
       setRating(value);
     } catch {
-      // silently ignore
+      /* silent */
     } finally {
       setIsRating(false);
     }
@@ -56,146 +56,186 @@ export default function ChapterReader({ chapter, anime }: ChapterReaderProps) {
     setIsLiking(true);
     const optimisticLiked = !liked;
     setLiked(optimisticLiked);
-    setLikesCount(c => c + (optimisticLiked ? 1 : -1));
+    setLikesCount((c) => c + (optimisticLiked ? 1 : -1));
     try {
-      const res = await fetch(`/api/chapter/${chapter.id}/like`, { method: 'POST' });
+      const res = await fetch(`/api/chapter/${chapter.id}/like`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setLiked(data.liked);
         setLikesCount(data.likes_count);
       } else {
-        // rollback
         setLiked(!optimisticLiked);
-        setLikesCount(c => c + (optimisticLiked ? -1 : 1));
+        setLikesCount((c) => c + (optimisticLiked ? -1 : 1));
       }
     } catch {
       setLiked(!optimisticLiked);
-      setLikesCount(c => c + (optimisticLiked ? -1 : 1));
+      setLikesCount((c) => c + (optimisticLiked ? -1 : 1));
     } finally {
       setIsLiking(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D1A] text-gray-200 py-8 md:py-12">
-      <div className="container mx-auto px-4 md:px-6 max-w-4xl">
+    <article style={{ padding: "44px 44px 120px", maxWidth: 880, margin: "0 auto" }}>
 
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-xs md:text-sm text-gray-500 mb-8 md:mb-12 overflow-x-auto whitespace-nowrap pb-2">
-          <Link href="/" className="hover:text-[#E8409A] flex items-center gap-1 transition-colors">
-            <Home className="w-3.5 h-3.5" />
-            Главная
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <Link href="/catalog" className="hover:text-[#E8409A] flex items-center gap-1 transition-colors">
-            <LayoutGrid className="w-3.5 h-3.5" />
-            Каталог
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <Link href={`/anime/${anime.id}`} className="hover:text-[#E8409A] transition-colors">
-            {anime.title_ru || anime.title_en}
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-gray-300 truncate">
-            {chapter.title || "Глава"}
+      {/* Breadcrumbs */}
+      <nav
+        className="flex items-center gap-2 mb-10 overflow-x-auto whitespace-nowrap pb-2"
+        style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}
+      >
+        <Link href="/" className="flex items-center gap-1 transition-colors" style={{ color: "var(--ash)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--cinnabar)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ash)")}
+        >
+          <Home className="w-3 h-3" /> Главная
+        </Link>
+        <ChevronRight className="w-3 h-3" />
+        <Link href="/catalog" className="flex items-center gap-1 transition-colors" style={{ color: "var(--ash)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--cinnabar)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ash)")}
+        >
+          <LayoutGrid className="w-3 h-3" /> Каталог
+        </Link>
+        <ChevronRight className="w-3 h-3" />
+        <Link href={`/anime/${anime.id}`} className="transition-colors" style={{ color: "var(--ash)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--cinnabar)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ash)")}
+        >
+          {anime.title_ru || anime.title_en}
+        </Link>
+        <ChevronRight className="w-3 h-3" />
+        <span className="truncate" style={{ color: "var(--ink)" }}>{chapter.title || "Глава"}</span>
+      </nav>
+
+      {/* Header */}
+      <header className="mb-14">
+        <div className="ac-eyebrow mb-6">
+          <span className="dot" />
+          <span>
+            {anime.title_ru || anime.title_en} · {new Date(chapter.created_at).toLocaleDateString("ru-RU", {
+              day: "numeric", month: "long", year: "numeric",
+            })}
           </span>
-        </nav>
+          <span className="line hidden md:inline-block" />
+        </div>
 
-        {/* Header */}
-        <header className="mb-8 md:mb-16 space-y-3 md:space-y-4">
-          <h1 className="text-2xl md:text-5xl font-bold text-white leading-tight">
-            {chapter.title || "Новая глава"}
-          </h1>
-          <div className="flex items-center gap-3 text-sm text-gray-500 italic">
-            <span>{anime.title_ru || anime.title_en}</span>
-            <span>•</span>
-            <span>{new Date(chapter.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+        <h1
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 400,
+            fontStyle: "italic",
+            fontSize: "clamp(36px, 6vw, 72px)",
+            lineHeight: 1,
+            letterSpacing: "-0.025em",
+            color: "var(--ink)",
+          }}
+        >
+          {chapter.title || "Новая глава"}
+        </h1>
+      </header>
+
+      {/* Content — сам читательский блок. Serif, увеличенный интерлиньяж,
+          широкая раскладка, чуть сдержаннее цвет текста. */}
+      <div
+        className="mb-16"
+        style={{
+          fontFamily: "var(--font-serif)",
+          fontSize: "clamp(17px, 1.3vw, 19px)",
+          lineHeight: 1.75,
+          color: "var(--ink)",
+          opacity: 0.92,
+        }}
+      >
+        {chapter.content.split("\n").map((paragraph, idx) =>
+          paragraph.trim() ? (
+            <p key={idx} style={{ marginBottom: "1.5em", textIndent: "1.5em" }}>
+              {paragraph}
+            </p>
+          ) : null
+        )}
+      </div>
+
+      {/* Footer actions */}
+      <footer className="ac-line-top pt-12 mb-16">
+        <div
+          className="p-7 md:p-9 space-y-6 text-center"
+          style={{ background: "var(--paper-2)", border: "1px solid var(--line)" }}
+        >
+          <div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ash)", marginBottom: 10 }}>
+              Оценка
+            </div>
+            <h3
+              style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 22, color: "var(--ink)" }}
+            >
+              Понравилась глава?
+            </h3>
           </div>
-        </header>
 
-        {/* Content */}
-        <article className="max-w-[680px] mx-auto mb-12 md:mb-20">
-          <div
-            className="font-serif text-[16px] md:text-[18px] leading-[1.8] space-y-6 md:space-y-8 text-gray-300 selection:bg-[#E8409A]/30"
-            style={{ fontFamily: 'Georgia, serif' }}
-          >
-            {chapter.content.split('\n').map((paragraph, idx) => (
-              paragraph.trim() && (
-                <p key={idx}>
-                  {paragraph}
-                </p>
-              )
+          {/* Like */}
+          <div className="flex items-center justify-center">
+            <button
+              onClick={handleLike}
+              disabled={isLiking}
+              className="flex items-center gap-2.5 transition-all disabled:opacity-50"
+              style={{
+                padding: "10px 22px",
+                borderRadius: 2,
+                border: `1px solid ${liked ? "var(--cinnabar)" : "var(--line-strong)"}`,
+                background: liked ? "var(--cinnabar)" : "transparent",
+                color: liked ? "#fff" : "var(--ink)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 12,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              <Heart className="w-4 h-4" style={{ fill: liked ? "currentColor" : "none" }} />
+              {likesCount > 0 ? likesCount : "Нравится"}
+            </button>
+          </div>
+
+          {/* Stars */}
+          <div className="flex items-center justify-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onClick={() => handleRate(star)}
+                disabled={isRating}
+                className="p-1 transition-transform hover:scale-110 active:scale-90 disabled:opacity-50"
+              >
+                <Star
+                  className="w-7 h-7"
+                  style={{
+                    color: star <= rating ? "var(--gold)" : "var(--line-strong)",
+                    fill: star <= rating ? "var(--gold)" : "transparent",
+                    filter: star <= rating ? "drop-shadow(0 0 8px rgba(223,181,94,0.4))" : "none",
+                  }}
+                />
+              </button>
             ))}
           </div>
-        </article>
+        </div>
+      </footer>
 
-        {/* Footer Actions */}
-        <footer className="max-w-[680px] mx-auto border-t border-white/5 pt-12 text-center space-y-12">
-
-          {/* Like + Rating */}
-          <div className="space-y-6 bg-[#1A1A2E] p-5 md:p-8 rounded-3xl border border-white/5">
-            <h3 className="text-xl font-bold text-white">Понравилась глава?</h3>
-
-            {/* Like button */}
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={handleLike}
-                disabled={isLiking}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all font-semibold text-sm disabled:opacity-50 ${
-                  liked
-                    ? 'bg-[#E8409A]/20 border-[#E8409A] text-[#E8409A]'
-                    : 'border-white/10 text-gray-400 hover:border-[#E8409A]/50 hover:text-[#E8409A]'
-                }`}
-              >
-                <Heart className={`w-4 h-4 ${liked ? 'fill-[#E8409A]' : ''}`} />
-                {likesCount > 0 ? likesCount : 'Нравится'}
-              </button>
-            </div>
-
-            {/* Stars */}
-            <div className="flex items-center justify-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => handleRate(star)}
-                  disabled={isRating}
-                  className="p-1 transition-transform hover:scale-125 active:scale-90 disabled:opacity-50"
-                >
-                  <Star
-                    className={`w-8 h-8 ${
-                      star <= rating
-                        ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]'
-                        : 'text-gray-600'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Next Steps */}
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <Link
-              href={`/anime/${anime.id}`}
-              className="bg-[#E8409A] hover:bg-[#d13589] text-white px-8 py-4 rounded-2xl font-bold transition-all transform hover:scale-105 shadow-lg shadow-[#E8409A]/20 flex items-center justify-center gap-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              Создать ещё одну главу
-            </Link>
-            <Link
-              href="/catalog"
-              className="bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-2xl font-bold transition-all border border-white/10 flex items-center justify-center gap-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Вернуться в каталог
-            </Link>
-          </div>
-        </footer>
-
-        {/* Comments */}
-        <CommentsSection chapterId={chapter.id} />
-
+      {/* Next steps */}
+      <div className="flex flex-wrap gap-3 justify-center mb-20">
+        <Link href={`/anime/${anime.id}`} className="ac-btn cinnabar">
+          Создать ещё одну главу <span className="arr">→</span>
+        </Link>
+        <Link href="/catalog" className="ac-btn">
+          <ArrowLeft className="w-3.5 h-3.5" /> В каталог
+        </Link>
       </div>
-    </div>
+
+      {/* Comments */}
+      <CommentsSection chapterId={chapter.id} />
+
+      <style>{`
+        @media (max-width: 1100px) {
+          article { padding: 32px 24px 80px !important; }
+        }
+      `}</style>
+    </article>
   );
 }

@@ -1,7 +1,6 @@
 import { serviceClient } from "@/lib/admin/guard";
 import Link from "next/link";
-import Image from "next/image";
-import { Heart, MessageCircle, BookOpen, Sparkles, User } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 
 interface Props {
   animeId: number;
@@ -9,17 +8,12 @@ interface Props {
 }
 
 export default async function AnimeChaptersFeed({ animeId, animeName }: Props) {
-  const supabase = serviceClient(); // обходит RLS для чтения username из profiles
+  const supabase = serviceClient();
 
   const { data: chapters } = await supabase
     .from("chapters")
     .select(`
-      id,
-      title,
-      content,
-      created_at,
-      likes_count,
-      comments_count,
+      id, title, content, created_at, likes_count, comments_count,
       profiles!chapters_user_id_fkey ( username )
     `)
     .eq("anime_id", animeId)
@@ -39,43 +33,48 @@ export default async function AnimeChaptersFeed({ animeId, animeName }: Props) {
   }>;
 
   return (
-    <section className="mt-20 border-t border-white/5 pt-16">
-      <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <BookOpen className="w-6 h-6 text-[#E8409A]" />
-            Главы от фанатов
-          </h2>
+    <section className="ac-line-top pt-16 mt-12">
+      <div className="grid gap-6 items-end mb-10" style={{ gridTemplateColumns: "auto 1fr auto" }}>
+        <div className="ac-sec-num hidden md:block">零参</div>
+        <div className="ac-sec-title">
+          <div className="kicker">03 · Community</div>
+          <h2>Главы от <b>фанатов</b></h2>
           {list.length > 0 && (
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="mt-2" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}>
               {list.length === 12 ? "Последние 12 глав · " : `${list.length} ${plural(list.length, "глава", "главы", "глав")} · `}
-              написанных по аниме «{animeName}»
+              «{animeName}»
             </p>
           )}
         </div>
         {list.length > 0 && (
-          <Link
-            href="/community"
-            className="text-sm text-gray-500 hover:text-[#E8409A] transition-colors"
-          >
-            Все главы сообщества →
+          <Link href="/community" className="ac-sec-link">
+            Все главы →
           </Link>
         )}
       </div>
 
       {list.length === 0 ? (
-        /* Empty state */
-        <div className="py-20 flex flex-col items-center text-center gap-5 bg-[#1A1A2E] border border-dashed border-white/10 rounded-3xl">
-          <div className="w-16 h-16 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/20 flex items-center justify-center">
-            <Sparkles className="w-7 h-7 text-[#E8409A]" />
+        <div
+          className="py-20 flex flex-col items-center text-center gap-4"
+          style={{ border: "1px dashed var(--line-strong)", borderRadius: 2, background: "var(--paper-2)" }}
+        >
+          <div
+            className="w-14 h-14 flex items-center justify-center"
+            style={{ background: "rgba(232,93,79,0.12)", border: "1px solid rgba(232,93,79,0.4)", borderRadius: 2, color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 28 }}
+          >
+            続
           </div>
           <div>
-            <p className="text-white font-semibold text-lg">Пока нет глав</p>
-            <p className="text-gray-500 text-sm mt-1">Станьте первым, кто продолжит эту историю!</p>
+            <p style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 20, color: "var(--ink)" }}>
+              Пока нет глав
+            </p>
+            <p className="mt-1" style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}>
+              Станьте первым, кто продолжит эту историю
+            </p>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {list.map((ch) => {
             const preview = ch.content?.replace(/\n+/g, " ").slice(0, 160).trim();
             const author = ch.profiles?.username ?? "Аноним";
@@ -86,49 +85,47 @@ export default async function AnimeChaptersFeed({ animeId, animeName }: Props) {
             });
 
             return (
-              <article
+              <Link
                 key={ch.id}
-                className="group bg-[#1A1A2E] border border-white/5 hover:border-[#E8409A]/30 rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200"
+                href={`/chapter/${ch.id}`}
+                className="group relative flex flex-col gap-3 p-6 transition-all"
+                style={{ background: "var(--paper-2)", border: "1px solid var(--line)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--cinnabar)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--line)"; }}
               >
-                {/* Title */}
-                <h3 className="text-white font-bold text-base leading-snug line-clamp-2 group-hover:text-[#E8409A] transition-colors">
+                <div
+                  style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--cinnabar)" }}
+                >
+                  {date}
+                </div>
+
+                <h3
+                  style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: 20, lineHeight: 1.15, color: "var(--ink)", letterSpacing: "-0.01em" }}
+                  className="line-clamp-2"
+                >
                   {ch.title || "Без названия"}
                 </h3>
 
-                {/* Preview */}
                 {preview && (
-                  <p className="text-gray-400 text-sm leading-relaxed line-clamp-3 flex-1">
+                  <p
+                    className="line-clamp-3 flex-1"
+                    style={{ fontSize: 13, lineHeight: 1.55, color: "var(--ash)" }}
+                  >
                     {preview}…
                   </p>
                 )}
 
-                {/* Meta */}
-                <div className="flex items-center gap-2 text-xs text-gray-600 pt-1 border-t border-white/5">
-                  <div className="w-5 h-5 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/20 flex items-center justify-center shrink-0">
-                    <User className="w-2.5 h-2.5 text-[#E8409A]" />
-                  </div>
-                  <span className="truncate max-w-[110px] text-gray-400">{author}</span>
-                  <span className="ml-auto shrink-0">{date}</span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/chapter/${ch.id}`}
-                    className="flex-1 text-center bg-[#7B61FF] hover:bg-[#6545e0] text-white text-sm font-semibold py-2 rounded-xl transition-all"
-                  >
-                    Читать
-                  </Link>
-                  <div className="flex items-center gap-1 px-3 py-2 bg-white/5 rounded-xl text-xs text-gray-500">
-                    <Heart className="w-3.5 h-3.5 text-red-400" />
-                    {ch.likes_count ?? 0}
-                  </div>
-                  <div className="flex items-center gap-1 px-3 py-2 bg-white/5 rounded-xl text-xs text-gray-500">
-                    <MessageCircle className="w-3.5 h-3.5 text-[#E8409A]" />
-                    {ch.comments_count ?? 0}
+                <div
+                  className="flex items-center justify-between pt-3"
+                  style={{ borderTop: "1px solid var(--line)", fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}
+                >
+                  <span className="truncate max-w-[140px]" style={{ color: "var(--ink)" }}>@{author}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1.5"><Heart className="w-3 h-3" style={{ color: "var(--cinnabar)" }} />{ch.likes_count ?? 0}</span>
+                    <span className="flex items-center gap-1.5"><MessageCircle className="w-3 h-3" />{ch.comments_count ?? 0}</span>
                   </div>
                 </div>
-              </article>
+              </Link>
             );
           })}
         </div>
