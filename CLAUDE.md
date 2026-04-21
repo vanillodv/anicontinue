@@ -256,6 +256,164 @@ git push origin HEAD:main
 - `56c5911` script: seed-community-chapters — 10 demo-авторов × 30 глав
 - `b628f9c` script: автоперевод title_ru через Claude Haiku
 
+## Полная карта проекта (актуальна на 2026-04-21)
+
+### Статистика (из sitemap + API)
+- **Аниме в БД:** 244 (sitemap режет до 200, лимит в `sitemap.ts`)
+- **Публичных глав:** 62 (seed 29 + реальных ~33)
+- **Seed-авторов:** 10 (email `seed.*@anicontinue-demo.local`)
+- **Статических страниц в sitemap:** 3 (`/`, `/catalog`, `/community`)
+- **Активных AI-промптов:** 1 из 3 (v3.0-multi-fewshot)
+
+### Публичные страницы (/)
+| Роут | Назначение |
+|------|-----------|
+| `/` | Главная — hero, популярные тайтлы, последние главы |
+| `/catalog` | Каталог 244 тайтлов с поиском и пагинацией (20/страницу) |
+| `/community` | Лента публичных глав от всех пользователей |
+| `/anime/[id]` | Страница конкретного аниме — досье, последние главы, CTA |
+| `/chapter/[id]` | Читалка главы с комментариями и лайками |
+| `/pricing` | Поддержка проекта на Boosty (без тарифных карточек) |
+| `/feedback` | Пожелания пользователей с голосованием |
+| `/login` | Вход/регистрация (Google OAuth, email/password) |
+| `/legal/*` | 5 юридических страниц: offer, privacy, refund, terms, license |
+| `/maintenance` | Страница-заглушка при `maintenance_mode=true` |
+| `/auth/registration-closed` | При `registration_enabled=false` |
+| `/auth/auth-code-error` | Фоллбек OAuth |
+| `/payment/success`, `/payment/cancel` | Callback YooKassa (пока не используется) |
+
+### Приватные (требуют auth)
+| Роут | Кто видит |
+|------|----------|
+| `/profile` | Свой профиль — статистика, главы, лимит |
+| `/profile/history` | История всех своих глав по тайтлам |
+| `/settings` | Username, email, экспорт данных |
+| `/admin` | Дашборд (только admin/super_admin) |
+| `/admin/users` | Список пользователей, бан, начисления |
+| `/admin/moderation` | Модерация публичных глав |
+| `/admin/anime` | CRUD каталога |
+| `/admin/ai` | Редактор AI-промптов |
+| `/admin/analytics` | График расходов, топ аниме |
+| `/admin/grants` | История начислений |
+| `/admin/errors` | Лог ошибок генерации |
+| `/admin/suggestions` | Модерация пожеланий |
+| `/admin/settings` | Настройки сайта |
+
+### API routes
+| Категория | Endpoints |
+|-----------|-----------|
+| **Генерация** | `POST /api/generate` (Edge, streaming) |
+| **Каталог** | `GET /api/anime/top?q=...` |
+| **Главы** | `GET /api/community`, `GET/POST /api/chapter/[id]/{comments,like,rate}` |
+| **Юзер** | `GET /api/user/me`, `POST /api/user/username`, `GET /api/user/export-data` |
+| **Пожелания** | `GET/POST /api/suggestions`, `POST /api/suggestions/[id]/vote` |
+| **Картинки** | `GET /api/img?url=...` (MAL-прокси с Referer) |
+| **Настройки** | `GET /api/settings/public` |
+| **Аналитика** | `POST /api/analytics/collect`, `GET /api/cron/aggregate` |
+| **Платежи** | `POST /api/payment/{create,webhook}` (YooKassa, отложено) |
+| **OAuth** | `GET /auth/callback` |
+| **Админка** | 14 endpoint'ов в `/api/admin/*` |
+
+### Таблицы БД
+```
+anime            — каталог (id, title_ru, title_en, title_jp, synopsis,
+                   genres[], score, year, studio, episodes, status,
+                   poster_url, prompt_template, ending_context)
+profiles         — юзеры (id, username, role, chapters_used, chapters_limit, plan)
+chapters         — главы (id, user_id, anime_id, title, content, summary,
+                   rating, likes_count, comments_count, is_public, is_deleted,
+                   scene_params jsonb)
+chapter_likes    — лайки
+chapter_comments — комментарии
+ai_prompts       — промпты с версиями, is_active
+ai_usage_logs    — расход токенов
+site_settings    — key-value настройки сайта
+generation_grants — история начислений админами
+generation_errors — лог ошибок генерации
+payment_logs     — история оплат
+rate_limits      — счётчики для /api/generate
+suggestions      — пожелания + голоса
+analytics_daily  — агрегированная аналитика
+```
+
+### Компоненты (7 штук)
+- `AnimeCard` — карточка в каталоге (fallback 続, score, genres)
+- `CommentsSection` — комментарии к главе
+- `ExamplePreview` — landing-демо с hardcoded AoT
+- `CookieBanner`, `Footer` (`"use client"`), `Header` — layout
+- `SceneConstructor` — UI для выбора настроений/сценариев при генерации
+
+### Библиотеки (`src/lib/`)
+- `supabase/{client,server}.ts` — SSR + browser clients
+- `admin/guard.ts` — `requireAdmin()`, `serviceClient()`
+- `admin/audit.ts` — логирование действий админа
+- `claude/index.ts` — Anthropic SDK wrapper
+- `prompts/master.ts` — система промпт-сборки с `prompt_template`
+- `jikan/` — Jikan API клиент (для каталога)
+- `analytics/track.ts` — клиентская аналитика
+- `proxyImage.ts` — обёртка URL в `/api/img`
+- `settings.ts` — чтение `site_settings`
+- `validate.ts` — Zod схемы
+- `plans.ts` — тарифы (free/pro)
+- `genres.ts` — маппинг англ→рус жанров
+- `data/seed-anime.ts` + `batches/` — **устаревший** seed (до Jikan)
+
+### Скрипты (`scripts/`)
+**Актуальные:**
+- `import-anime-from-jikan.mjs` — импорт из Jikan (244 в БД)
+- `translate-titles-with-llm.mjs` — Claude Haiku → title_ru (168)
+- `translate-synopsis-with-llm.mjs` — Claude Haiku → synopsis (188)
+- `seed-community-chapters.mjs` — 10 demo-авторов × N глав
+
+**Устаревшие (one-shot fixes, кандидаты на удаление):**
+- `add-anime.mjs`, `final-fix-anime.mjs`, `fix-posters.mjs`,
+  `fix-wrong-anime.mjs`, `search-correct-ids.mjs`, `verify-anime.mjs`
+
+## TODO / Технический долг
+
+### 🔴 Критично (security / SEO)
+1. **`/api/anime/seed` — публичный GET без auth**. Anon RLS не пускает
+   запись, но endpoint бесполезен и тратит ресурсы при пинге ботов.
+   **Действие:** удалить файл `src/app/api/anime/seed/route.ts` +
+   `src/lib/data/seed-anime.ts` + `src/lib/data/batches/*`.
+2. **Sitemap режет до 200 при 244 тайтлах** в `src/app/sitemap.ts:9`.
+   `.limit(200)` — изменить на 500 или убрать.
+
+### 🟡 Улучшения UX / контент
+3. **OAuth только Google**. Email/password работает, но Yandex/VK не
+   поддерживаются Supabase. Альтернатива — кастомный OAuth-endpoint,
+   но это большая работа.
+4. **Фильтры в каталоге** — сейчас только поиск по имени. Нет фильтра
+   по жанру / году / студии / рейтингу.
+5. **Мало публичных глав** — 62, из них 29 seed. Пользователи ещё не
+   публикуют активно. Можно догенерить seed до 50–100.
+6. **Проверить мобильную адаптацию** всех страниц. `@media (max-width: 1100px)`
+   применён, но детали (header, hero-collage) могут ломаться на мобиле.
+7. **Нет `og-image` для главной** — есть `/og-image.svg`, но это SVG.
+   Telegram/VK плохо рендерят SVG превью. Сделать PNG 1200×630.
+
+### 🟢 Nice to have
+8. **Error monitoring (Sentry)** — сейчас ошибки только в `generation_errors`
+   и серверных логах Vercel.
+9. **Тесты** — ни unit, ни e2e. Для критичных мест (`/api/generate`,
+   `consume_chapter` RPC) хорошо бы покрыть.
+10. **Rate limit на `/api/img`** — бесплатный прокси без ограничений может
+    быть завален ботами. Добавить `check_rate_limit` RPC.
+11. **CSP header** — в `next.config.ts` есть базовые security headers,
+    но нет `Content-Security-Policy`. XSS в пользовательских главах
+    возможен (content хранится как plain text, но рендерится).
+12. **AI-расходы: нет kill-switch** — если промпт зациклится или бот массово
+    генерит, расходы на Anthropic могут взлететь. Нужен глобальный лимит
+    через `ai_usage_logs` + cron-проверка.
+13. **Тесты `/admin/*`** — нет smoke-тестов что защита `requireAdmin()` работает
+    на всех 14 admin API-endpoints.
+
+### 🔵 Cleanup / рефакторинг
+14. Удалить устаревшие скрипты `scripts/*.mjs` (6 штук).
+15. Удалить `src/lib/data/seed-anime.ts` и `batches/*` — после Jikan не нужны.
+16. Проверить, создаются ли профили для email/password регистрации
+    (в CLAUDE.md отмечено «нужно проверить»).
+
 ## Критические SEO-моменты (урок)
 - В Vercel установлена `NEXT_PUBLIC_APP_URL`, НЕ `NEXT_PUBLIC_SITE_URL`.
   `sitemap.ts` и `robots.ts` должны читать именно `APP_URL` с fallback
