@@ -231,7 +231,8 @@ async function claude(system, user) {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 3500,
+      // 5000 чтобы точно хватило на 2000-2500 слов (русский кириллица = 2-3 char/token)
+      max_tokens: 5000,
       temperature: 0.85,
       system,
       messages: [{ role: "user", content: user }],
@@ -244,11 +245,25 @@ async function claude(system, user) {
 
 function parseXml(text) {
   const title = text.match(/<title>([\s\S]*?)<\/title>/)?.[1]?.trim() || "Без названия";
-  const content = text.match(/<content>([\s\S]*?)<\/content>/)?.[1]?.trim() || "";
-  const summary = text.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.trim() || "";
+
+  // Контент — более толерантный парсер: если </content> обрезан по max_tokens,
+  // берём всё что после <content> и до <summary> или конца строки.
+  let content = "";
+  const withClose = text.match(/<content>([\s\S]*?)<\/content>/);
+  if (withClose) {
+    content = withClose[1];
+  } else {
+    const afterOpen = text.match(/<content>([\s\S]*?)(?:<summary>|$)/);
+    if (afterOpen) content = afterOpen[1];
+  }
+
+  const summary = text.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.trim()
+    || text.match(/<summary>([\s\S]*)$/)?.[1]?.trim()
+    || "";
+
   return {
     title: title.replace(/^[\s#*]+/, "").replace(/^[«"]/, "").replace(/[»"]$/, "").trim(),
-    content: content.replace(/^\s+/, ""),
+    content: content.trim().replace(/^\s+/, ""),
     summary: summary.replace(/^\s+/, ""),
   };
 }
@@ -327,11 +342,21 @@ ${ending ? `\nФИНАЛ ОРИГИНАЛА:\n${ending}` : ""}
 
 Пиши по правилам system-промпта. Формат XML. Объём 2000-2500 слов.`;
 
-      const text = await claude(system_prompt, userPrompt);
-      const { title: chTitle, content, summary } = parseXml(text);
+      // До 2 попыток — если Claude вернул обрезанный ответ, пробуем ещё раз
+      let parsed = { title: "", content: "", summary: "" };
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const text = await claude(system_prompt, userPrompt);
+        parsed = parseXml(text);
+        if (parsed.content.length >= 1000) break;
+        if (attempt < 2) {
+          console.log(`    ↻ попытка ${attempt}: короткий контент (${parsed.content.length}), retry...`);
+          await sleep(1500);
+        }
+      }
+      const { title: chTitle, content, summary } = parsed;
 
       if (content.length < 500) {
-        console.log(`  ${i+1}/${SEEDS.length} ⨯ ${title}: контент слишком короткий (${content.length} chars)`);
+        console.log(`  ${i+1}/${SEEDS.length} ⨯ ${title}: контент слишком короткий (${content.length} chars после 2 попыток)`);
         fail++;
         continue;
       }
