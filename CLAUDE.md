@@ -2,6 +2,29 @@
 
 # AniContinue — Project Memory
 
+## ⏳ PENDING (ждёт действий пользователя)
+
+Применить в **Supabase Dashboard → SQL Editor → New query → Run**:
+
+### 1. Миграция 020 — курированные промпты топ-10
+- **Файл:** `supabase/migrations/020_curated_prompts_top10.sql`
+- **Что даёт:** `anime.prompt_template` для 10 топ-тайтлов (AoT, FMA, Chainsaw Man, Demon Slayer, Naruto, One Piece, Your Name, Spirited Away, Death Note, Clannad). Характер героев, тон, запреты. Вшивается в system-prompt → AI меньше путает каноны.
+
+### 2. Активация промпта v3
+Отдельным запросом (не файл):
+```sql
+update ai_prompts set is_active = (version = '3.0-multi-fewshot');
+```
+Без этого активен v2-anti-cliche. v3 — с 3 few-shot примерами (drama AoT / romance Your Name / action HxH).
+
+### 3. Миграция 021 — русификация seed-данных
+- **Файл:** `supabase/migrations/021_humanize_seed_data.sql`
+- **Что даёт:** 10 demo-авторов получают русские ники (Аки, ОТП навсегда, Тоторовна, Полуночник, Кёко-сан, Фонарщик, Рина К., Цукина, Отаку 2099, Канонист) + рандомизация `created_at` их глав по последним 45 дням (в `/community` больше не все главы с одной датой).
+
+**Порядок:** 020 → активация v3 → 021. Индикатор успеха: «Success. No rows returned».
+
+---
+
 ## Стек
 - **Frontend/Backend**: Next.js 16 App Router (TypeScript) — **не 15**, см. AGENTS.md
 - **БД + Auth**: Supabase (PostgreSQL + RLS + Auth)
@@ -142,6 +165,7 @@ Supabase Dashboard → SQL Editor → вставить содержимое фа
 |--------|-----------|
 | `import-anime-from-jikan.mjs` | 10 страниц × 25 = до 250 тайтлов с Jikan API. **В БД уже: 244.** Retry с backoff (Jikan из РФ падает), 15s timeout, валидация service_role JWT (150+ символов, regex `^eyJ[A-Za-z0-9_\-.]{150,}$`). |
 | `translate-titles-with-llm.mjs` | Claude Haiku переводит `title_ru` батчами по 20. **Переведено: 168.** Официальные названия (Атака Титанов, Унесённые призраками, Твоё имя) + буква «ё». Стоимость ~$0.004 за 100 тайтлов. |
+| `translate-synopsis-with-llm.mjs` | Claude Haiku переводит `synopsis` (детект по отсутствию кириллицы), батч 5, max_tokens 3500. **Переведено: 188 / 0 ошибок.** Канонические транслиты имён (Сироганэ, Кагуя, Йегер, Удзумаки). Стоимость ~$0.05 за 100 тайтлов. |
 | `seed-community-chapters.mjs` | 10 demo-авторов × 30 глав в `/community`. Email-паттерн `seed.*@anicontinue-demo.local`. max_tokens: **5000** (иначе XML обрезается), retry 2 попытки на короткий контент. **Сгенерировано: 29+ глав.** |
 
 **Запуск скриптов (из корня репо):**
@@ -245,6 +269,9 @@ git push origin HEAD:main
 Текущая модель монетизации: **Boosty** (ручное начисление через `/admin/users/[id]/grant` после доната). Страница `/pricing` — только CTA на Boosty + FAQ, без карточек сумм/тарифов.
 
 ## История деплоев (последние ключевые)
+- `9e9a716` script: автоперевод synopsis через Claude Haiku (188/0 переведено)
+- `22cfdbb` fix(img): проксировать myanimelist.net, а не только cdn.*
+- `7fe9815` docs: зафиксировать текущее состояние проекта в CLAUDE.md
 - `2770c71` pricing: убрать блок «Ориентировочные суммы» с 3 карточками
 - `b548b88` migration 021: русификация seed-никнеймов + рандом created_at
 - `878f86d` seed-script: max_tokens 3500→5000 + толерантный парсер + retry
