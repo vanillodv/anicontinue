@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   const items = (data ?? []).map((chapter: any) => ({
     id: chapter.id,
     title: chapter.title,
-    preview: chapter.content ? chapter.content.slice(0, 200) : '',
+    preview: chapter.content ? chapter.content.replace(/^\s+/, '').replace(/\s+/g, ' ').slice(0, 200) : '',
     created_at: chapter.created_at,
     anime_id: chapter.anime_id,
     user_id: chapter.user_id,

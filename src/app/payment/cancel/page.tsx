@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { XCircle, ArrowLeft, CreditCard } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Оплата отменена",
+  description: "Платёж отменён. Ничего не списано. Можете попробовать снова в любое время.",
+};
 
 export default function PaymentCancelPage() {
   return (

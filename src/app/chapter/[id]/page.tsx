@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ChapterReader from "./ChapterReader";
@@ -5,6 +6,30 @@ import { Chapter, Anime } from "@/types";
 
 interface ChapterPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: ChapterPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: ch } = await supabase
+    .from("chapters")
+    .select("title, content, anime(title_ru, title_en, poster_url)")
+    .eq("id", id)
+    .single();
+  if (!ch) return { title: "Глава не найдена" };
+  const anime = (ch as any).anime;
+  const title = ch.title || "Без названия";
+  const animeName = anime?.title_ru || anime?.title_en || "Аниме";
+  const snippet = ((ch.content as string) || "").replace(/\s+/g, " ").slice(0, 155).trim();
+  return {
+    title: `${title} — ${animeName}`,
+    description: snippet || `Фанфик-глава по «${animeName}».`,
+    openGraph: {
+      title: `${title} · ${animeName}`,
+      description: snippet,
+      images: anime?.poster_url ? [{ url: anime.poster_url, alt: animeName }] : undefined,
+    },
+  };
 }
 
 export default async function ChapterPage({ params }: ChapterPageProps) {

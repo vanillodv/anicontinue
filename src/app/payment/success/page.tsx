@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Heart } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Спасибо за поддержку",
+  description: "Ваш донат получен. Мы добавим генерации в течение 24 часов как знак благодарности.",
+};
 
 export default function PaymentSuccessPage() {
   return (

@@ -226,11 +226,11 @@ export default async function Home() {
             );
           })}
 
-          {/* Печать */}
+          {/* Печать — прижата к правому краю poster-stack, не вылезает за него */}
           <div
             className="absolute"
             style={{
-              top: -10, right: -20, width: 110, height: 110, borderRadius: "50%",
+              top: -10, right: 0, width: 100, height: 100, borderRadius: "50%",
               background: "var(--cinnabar)", color: "#fff",
               display: "grid", placeItems: "center", textAlign: "center",
               fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 14, lineHeight: 1.25,
@@ -264,13 +264,13 @@ export default async function Home() {
               className="relative transition-colors duration-300"
               style={{ padding: "44px 28px 60px", borderRight: i < 3 ? "1px solid var(--line)" : "none" }}
             >
-              <div className="flex items-center gap-2.5" style={{ fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 20, color: "var(--cinnabar)", marginBottom: 180 }}>
+              <div className="flex items-center gap-2.5" style={{ fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 20, color: "var(--cinnabar)", marginBottom: 56 }}>
                 <span>Шаг 0{i + 1}</span>
                 <span className="flex-1 h-px" style={{ background: "var(--line-strong)" }} />
               </div>
               <div
-                className="absolute top-20 right-7 pointer-events-none"
-                style={{ fontSize: 54, opacity: 0.1, fontFamily: "var(--font-jp)", fontWeight: 900, color: "var(--ink)" }}
+                className="absolute top-14 right-7 pointer-events-none"
+                style={{ fontSize: 64, opacity: 0.08, fontFamily: "var(--font-jp)", fontWeight: 900, color: "var(--ink)" }}
               >
                 {s.n}
               </div>

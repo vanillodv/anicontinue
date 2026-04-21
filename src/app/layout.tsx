@@ -43,7 +43,8 @@ const notoJp = Noto_Serif_JP({
 });
 
 export const metadata: Metadata = {
-  title: { default: "AniContinue", template: "%s | AniContinue" },
+  metadataBase: new URL("https://www.anicontinue.ru"),
+  title: { default: "AniContinue — Продолжи своё любимое аниме с AI", template: "%s | AniContinue" },
   description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
   keywords: ["аниме", "фанфик", "AI", "продолжение аниме", "AniContinue"],
   openGraph: {
@@ -52,8 +53,21 @@ export const metadata: Metadata = {
     siteName: "AniContinue",
     title: "AniContinue — Продолжи своё любимое аниме с AI",
     description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "AniContinue — фанфики нового поколения",
+      },
+    ],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    title: "AniContinue — Продолжи своё любимое аниме с AI",
+    description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
+    images: ["/og-image.svg"],
+  },
 };
 
 export default async function RootLayout({
@@ -66,18 +80,19 @@ export default async function RootLayout({
     createClient(),
   ]);
 
-  let isAdmin = false;
-  if (settings.maintenance_mode) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      isAdmin = ['admin', 'super_admin'].includes(profile?.role ?? '');
-    }
+  // Один запрос сессии + роли на весь layout — передаём в Header как prop,
+  // чтобы он не дёргал /api/user/me на каждой странице (это было ~1.4с).
+  const { data: { user } } = await supabase.auth.getUser();
+  let role: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    role = profile?.role ?? null;
   }
+  const isAdmin = ['admin', 'super_admin'].includes(role ?? '');
 
   const fontVars = `${manrope.variable} ${fraunces.variable} ${jetbrains.variable} ${notoJp.variable}`;
 
@@ -88,7 +103,7 @@ export default async function RootLayout({
           <MaintenancePage />
         ) : (
           <>
-            <Header />
+            <Header initialUser={user} initialRole={role} />
             {settings.site_notice && (
               <div className="relative z-20 border-b border-[color:var(--line)] text-center py-2 px-4 text-sm"
                    style={{ background: "rgba(232,93,79,0.08)", color: "var(--cinnabar)" }}>

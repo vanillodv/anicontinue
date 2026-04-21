@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import HistoryClient from "./HistoryClient";
+
+export const metadata: Metadata = {
+  title: "История глав",
+  description: "Все мои главы — истории, написанные по тайтлам, сгруппированные по аниме.",
+};
 
 export default async function HistoryPage() {
   const supabase = await createClient();

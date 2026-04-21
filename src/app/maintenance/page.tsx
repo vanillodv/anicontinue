@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Технические работы",
+  description: "Сайт временно недоступен — мы делаем его лучше. Заходите позже.",
+};
+
 export default function MaintenancePage() {
   return (
     <div

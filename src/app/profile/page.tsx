@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { User, ArrowRight, Globe, Lock, Star, Heart } from "lucide-react";
 import { Profile, Chapter, Anime } from "@/types";
+
+export const metadata: Metadata = {
+  title: "Профиль",
+  description: "Личный кабинет AniContinue — ваш профиль, статистика и история написанных глав.",
+};
 
 interface ExtendedChapter extends Chapter {
   anime: Pick<Anime, "id" | "title_ru" | "title_en" | "poster_url">;

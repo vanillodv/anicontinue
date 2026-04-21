@@ -14,9 +14,14 @@ const NAV_LINKS = [
   { href: "/pricing",   label: "Поддержка" },
 ];
 
-export default function Header() {
-  const [user, setUser]               = useState<any>(null);
-  const [role, setRole]               = useState<string | null>(null);
+interface HeaderProps {
+  initialUser?: any;
+  initialRole?: string | null;
+}
+
+export default function Header({ initialUser = null, initialRole = null }: HeaderProps) {
+  const [user, setUser]               = useState<any>(initialUser);
+  const [role, setRole]               = useState<string | null>(initialRole);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen]   = useState(false);
   const [howOpen, setHowOpen]         = useState(false);
@@ -31,6 +36,8 @@ export default function Header() {
   }, [mobileOpen]);
 
   useEffect(() => {
+    // Пропускаем первичный fetch — данные пришли через initialUser/initialRole из Server Layout.
+    // Слушаем только auth-state-change чтобы обновиться при логине/логауте.
     const loadRole = async () => {
       try {
         const res = await fetch("/api/user/me");
@@ -39,13 +46,6 @@ export default function Header() {
         setRole(data.role ?? null);
       } catch { setRole(null); }
     };
-
-    const loadUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) loadRole();
-    };
-    loadUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);

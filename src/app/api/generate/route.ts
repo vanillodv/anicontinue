@@ -243,14 +243,19 @@ export async function POST(req: Request) {
           const usage = finalResponse.usage;
           let chapterId: string | null = null;
 
+          // Санитизация: убираем markdown-префиксы и лидирующие пробелы
+          const cleanTitle = (title || 'Без названия').replace(/^[\s#*]+/, '').trim() || 'Без названия';
+          const cleanContent = (content || 'Текст отсутствует').replace(/^\s+/, '');
+          const cleanSummary = (summary || '').replace(/^\s+/, '');
+
           const { data: chapter, error: chapterErr } = await supabase
             .from('chapters')
             .insert({
               user_id: userId,
               anime_id: params.animeId,
-              title: title || 'Без названия',
-              content: content || 'Текст отсутствует',
-              summary: summary || '',
+              title: cleanTitle,
+              content: cleanContent,
+              summary: cleanSummary,
               scene_params: params,
               is_public: params.isPublic,
             })
