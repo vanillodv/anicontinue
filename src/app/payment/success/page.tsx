@@ -1,43 +1,61 @@
 import Link from "next/link";
-import { Heart, Sparkles, ArrowRight } from "lucide-react";
+import { Heart } from "lucide-react";
 
 export default function PaymentSuccessPage() {
   return (
-    <main className="min-h-screen bg-[#0D0D1A] flex items-center justify-center py-16 px-6">
+    <div className="flex items-center justify-center py-16 px-6" style={{ minHeight: "calc(100vh - 72px)" }}>
       <div className="max-w-lg w-full text-center">
-
-        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#E8409A]/10 border border-[#E8409A]/30 mb-8 mx-auto">
-          <Heart className="w-12 h-12 text-[#E8409A]" />
+        <div
+          className="inline-flex items-center justify-center w-24 h-24 mb-8"
+          style={{ background: "var(--cinnabar)", color: "#fff", borderRadius: 2, boxShadow: "0 0 40px rgba(232,93,79,0.35)" }}
+        >
+          <Heart className="w-12 h-12" />
         </div>
 
-        <h1 className="text-4xl font-bold text-white mb-4">Спасибо за поддержку!</h1>
-        <p className="text-gray-400 text-lg mb-4 max-w-md mx-auto">
-          Твой донат помогает проекту жить и развиваться. Это очень важно для нас ❤️
+        <div className="ac-eyebrow mb-5 justify-center">
+          <span className="dot" />
+          <span>感謝 · Thank you</span>
+        </div>
+
+        <h1
+          className="mb-5"
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 400,
+            fontStyle: "italic",
+            fontSize: "clamp(36px, 5vw, 64px)",
+            lineHeight: 0.95,
+            letterSpacing: "-0.025em",
+            color: "var(--ink)",
+          }}
+        >
+          Спасибо за <b style={{ fontStyle: "normal", fontWeight: 900 }}>поддержку!</b>
+        </h1>
+        <p className="max-w-md mx-auto mb-6" style={{ color: "var(--ash)", fontSize: 16, lineHeight: 1.6 }}>
+          Твой донат помогает проекту жить и развиваться. Это очень важно для нас.
         </p>
-        <div className="bg-[#1A1A2E] border border-white/10 rounded-2xl p-5 mb-10 text-sm text-gray-400 leading-relaxed">
-          Чтобы получить генерации в подарок — напиши на{" "}
-          <span className="text-[#E8409A]">support@anicontinue.ru</span>{" "}
-          и укажи свой email в AniContinue. Добавим в течение 24 часов.
+
+        <div
+          className="mb-10 p-5 text-left"
+          style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)", borderLeft: "3px solid var(--cinnabar)" }}
+        >
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--cinnabar)", marginBottom: 8 }}>
+            Что дальше
+          </div>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink)", opacity: 0.85 }}>
+            Чтобы получить генерации в подарок — напиши на{" "}
+            <span style={{ color: "var(--cinnabar)" }}>support@anicontinue.ru</span>{" "}
+            и укажи свой email в AniContinue. Добавим в течение 24 часов.
+          </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/catalog"
-            className="inline-flex items-center justify-center gap-2 bg-[#E8409A] hover:bg-[#d13589] text-white font-bold py-4 px-8 rounded-full transition-all shadow-lg shadow-[#E8409A]/20"
-          >
-            <Sparkles className="w-5 h-5" />
-            Начать создавать
+        <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
+          <Link href="/catalog" className="ac-btn cinnabar">
+            Начать создавать <span className="arr">→</span>
           </Link>
-          <Link
-            href="/profile"
-            className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-4 px-8 rounded-full transition-all"
-          >
-            Мой профиль
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          <Link href="/profile" className="ac-btn">Мой профиль</Link>
         </div>
-
       </div>
-    </main>
+    </div>
   );
 }

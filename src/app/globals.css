@@ -236,6 +236,80 @@ body::before {
   background: rgba(242, 235, 217, 0.03);
 }
 
+/* Legal/юридические документы — типографика read-first. */
+.legal-doc {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 44px 24px 96px;
+  color: var(--ink);
+}
+.legal-doc h1 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(32px, 4.5vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  margin-bottom: 10px;
+}
+.legal-doc h1 b { font-style: normal; font-weight: 900; }
+.legal-doc .meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 36px;
+}
+.legal-doc .callout {
+  background: var(--paper-2);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--cinnabar);
+  padding: 18px 22px;
+  margin-bottom: 36px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ash);
+}
+.legal-doc .callout strong { color: var(--ink); font-weight: 700; }
+.legal-doc h2 {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  margin-top: 32px;
+  margin-bottom: 14px;
+  color: var(--ink);
+}
+.legal-doc section { margin-bottom: 28px; }
+.legal-doc p {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink);
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+.legal-doc ul {
+  padding-left: 24px;
+  margin: 8px 0 12px;
+}
+.legal-doc li {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink);
+  opacity: 0.85;
+  list-style: none;
+  position: relative;
+}
+.legal-doc li::before {
+  content: "—";
+  position: absolute;
+  left: -18px;
+  color: var(--cinnabar);
+  font-family: var(--font-mono);
+}
+.legal-doc .accent { color: var(--cinnabar); }
+
 /* Iconic-кнопка со hover-реверсом (cinnabar bg на hover).
    Используется рядом с .group — появляется при hover родителя. */
 .ac-icon-btn {

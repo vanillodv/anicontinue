@@ -3,34 +3,47 @@ import { XCircle, ArrowLeft, CreditCard } from "lucide-react";
 
 export default function PaymentCancelPage() {
   return (
-    <main className="min-h-screen bg-[#0D0D1A] flex items-center justify-center py-16 px-6">
+    <div className="flex items-center justify-center py-16 px-6" style={{ minHeight: "calc(100vh - 72px)" }}>
       <div className="max-w-lg w-full text-center">
-        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-red-500/10 border border-red-500/30 mb-8 mx-auto">
-          <XCircle className="w-12 h-12 text-red-400" />
+        <div
+          className="inline-flex items-center justify-center w-20 h-20 mb-8"
+          style={{ background: "rgba(232,93,79,0.1)", border: "1px solid var(--cinnabar)", color: "var(--cinnabar)", borderRadius: 2 }}
+        >
+          <XCircle className="w-10 h-10" />
         </div>
 
-        <h1 className="text-4xl font-bold text-white mb-4">Оплата отменена</h1>
-        <p className="text-gray-400 text-lg mb-10 max-w-md mx-auto">
+        <div className="ac-eyebrow mb-5 justify-center">
+          <span className="dot" />
+          <span>キャンセル · Cancelled</span>
+        </div>
+
+        <h1
+          className="mb-5"
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 400,
+            fontStyle: "italic",
+            fontSize: "clamp(32px, 5vw, 56px)",
+            lineHeight: 0.95,
+            letterSpacing: "-0.025em",
+            color: "var(--ink)",
+          }}
+        >
+          Оплата <b style={{ fontStyle: "normal", fontWeight: 900 }}>отменена</b>
+        </h1>
+        <p className="max-w-md mx-auto mb-10" style={{ color: "var(--ash)", fontSize: 16, lineHeight: 1.6 }}>
           Вы отменили платёж. Ничего не списано. Можете попробовать снова в любое время.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/pricing"
-            className="inline-flex items-center justify-center gap-2 bg-[#E8409A] hover:bg-[#d13589] text-white font-bold py-4 px-8 rounded-full transition-all shadow-lg shadow-[#E8409A]/20"
-          >
-            <CreditCard className="w-5 h-5" />
-            Попробовать снова
+        <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
+          <Link href="/pricing" className="ac-btn cinnabar">
+            <CreditCard className="w-3.5 h-3.5" /> Попробовать снова
           </Link>
-          <Link
-            href="/profile"
-            className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-4 px-8 rounded-full transition-all"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            В профиль
+          <Link href="/profile" className="ac-btn">
+            <ArrowLeft className="w-3.5 h-3.5" /> В профиль
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

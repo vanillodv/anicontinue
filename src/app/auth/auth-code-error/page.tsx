@@ -3,32 +3,50 @@ import { AlertCircle } from "lucide-react";
 
 export default function AuthErrorPage() {
   return (
-    <main className="min-h-screen bg-[#0D0D1A] flex flex-col items-center justify-center p-6 text-center">
-      <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500">
-        <div className="bg-[#1A1A2E] p-10 rounded-3xl border border-white/5 shadow-2xl space-y-6">
-          <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto">
-            <AlertCircle className="w-10 h-10" />
-          </div>
-          
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-white">Ошибка входа</h1>
-            <p className="text-gray-400">
-              Не удалось подтвердить ваш аккаунт или истёк срок действия ссылки.
-            </p>
-          </div>
-
-          <Link
-            href="/login"
-            className="block w-full bg-[#E8409A] hover:bg-[#d13589] text-white py-4 px-6 rounded-2xl font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+    <div className="flex flex-col items-center justify-center p-6 text-center" style={{ minHeight: "calc(100vh - 72px)" }}>
+      <div className="w-full max-w-md">
+        <div className="p-10 text-center" style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)" }}>
+          <div
+            className="w-16 h-16 mx-auto mb-6 flex items-center justify-center"
+            style={{ background: "rgba(232,93,79,0.12)", border: "1px solid var(--cinnabar)", color: "var(--cinnabar)", borderRadius: 2 }}
           >
-            Попробовать снова
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <div className="ac-eyebrow mb-4 justify-center">
+            <span className="dot" />
+            <span>Ошибка · 認証エラー</span>
+          </div>
+          <h1
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontWeight: 400,
+              fontStyle: "italic",
+              fontSize: "clamp(28px, 4vw, 40px)",
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
+              color: "var(--ink)",
+              marginBottom: 12,
+            }}
+          >
+            Ошибка <b style={{ fontStyle: "normal", fontWeight: 900 }}>входа</b>
+          </h1>
+          <p className="mb-8" style={{ color: "var(--ash)", fontSize: 14, lineHeight: 1.55 }}>
+            Не удалось подтвердить ваш аккаунт или истёк срок действия ссылки.
+          </p>
+          <Link href="/login" className="ac-btn cinnabar w-full justify-center">
+            Попробовать снова <span className="arr">→</span>
           </Link>
         </div>
-        
-        <Link href="/" className="text-gray-500 hover:text-white transition-colors text-sm">
-          Вернуться на главную
-        </Link>
+        <div className="text-center mt-6">
+          <Link
+            href="/"
+            className="transition-colors"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ash)" }}
+          >
+            ← Вернуться на главную
+          </Link>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
