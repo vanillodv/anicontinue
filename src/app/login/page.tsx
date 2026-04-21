@@ -18,7 +18,7 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-  const [activeTab, setActiveTab] = useState<"social" | "email">("social");
+  const [activeTab, setActiveTab] = useState<'social' | 'email'>('social');
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +32,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setError(null);
     await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   };
@@ -47,7 +47,8 @@ export default function LoginPage() {
         if (password !== confirmPassword) {
           throw new Error("Пароли не совпадают");
         }
-        const settingsRes = await fetch("/api/settings/public");
+        // Проверяем разрешена ли регистрация
+        const settingsRes = await fetch('/api/settings/public');
         const settings = await settingsRes.json();
         if (!settings.registration_enabled) {
           throw new Error("Регистрация временно приостановлена. Попробуйте позже.");
@@ -71,177 +72,125 @@ export default function LoginPage() {
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    background: "transparent",
-    border: "1px solid var(--line-strong)",
-    borderRadius: 2,
-    color: "var(--ink)",
-    fontFamily: "var(--font-sans)",
-    fontSize: 14,
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6" style={{ minHeight: "calc(100vh - 72px)" }}>
-      <div className="w-full max-w-md text-center">
-        {/* Brand */}
-        <Link href="/" className="inline-flex items-center gap-3 mb-10" style={{ fontFamily: "var(--font-serif)", fontWeight: 900 }}>
-          <span className="ac-seal" style={{ width: 40, height: 40, fontSize: 22 }}>続</span>
-          <span className="text-3xl" style={{ color: "var(--ink)" }}>AniContinue</span>
+    <main className="min-h-screen bg-[#0D0D1A] flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-md space-y-8 text-center animate-in fade-in zoom-in duration-500">
+        <Link href="/" className="inline-block">
+          <h1 className="text-5xl font-bold text-[#E8409A] drop-shadow-[0_0_15px_rgba(232,64,154,0.3)]">
+            🌸 AniContinue
+          </h1>
         </Link>
 
-        {/* Card */}
-        <div className="text-left" style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)" }}>
-          {/* Tabs */}
-          <div className="grid grid-cols-2" style={{ borderBottom: "1px solid var(--line-strong)", fontFamily: "var(--font-mono)" }}>
+        <div className="bg-[#1A1A2E] rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
+          {/* Табы */}
+          <div className="flex border-b border-white/5">
             <button
-              onClick={() => setActiveTab("social")}
-              className="py-4 transition-all text-xs tracking-[0.2em] uppercase"
-              style={{
-                color: activeTab === "social" ? "var(--cinnabar)" : "var(--ash)",
-                borderBottom: activeTab === "social" ? "2px solid var(--cinnabar)" : "2px solid transparent",
-                background: activeTab === "social" ? "rgba(232,93,79,0.05)" : "transparent",
-              }}
+              onClick={() => setActiveTab('social')}
+              className={`flex-1 py-4 text-sm font-bold transition-all ${activeTab === 'social' ? 'text-[#E8409A] bg-white/5 border-b-2 border-[#E8409A]' : 'text-gray-500 hover:text-gray-300'}`}
             >
               Соцсети
             </button>
             <button
-              onClick={() => setActiveTab("email")}
-              className="py-4 transition-all text-xs tracking-[0.2em] uppercase"
-              style={{
-                color: activeTab === "email" ? "var(--cinnabar)" : "var(--ash)",
-                borderBottom: activeTab === "email" ? "2px solid var(--cinnabar)" : "2px solid transparent",
-                background: activeTab === "email" ? "rgba(232,93,79,0.05)" : "transparent",
-              }}
+              onClick={() => setActiveTab('email')}
+              className={`flex-1 py-4 text-sm font-bold transition-all ${activeTab === 'email' ? 'text-[#E8409A] bg-white/5 border-b-2 border-[#E8409A]' : 'text-gray-500 hover:text-gray-300'}`}
             >
               Email
             </button>
           </div>
 
-          <div className="p-8 space-y-5">
-            <div className="text-center mb-4">
-              <div className="ac-eyebrow mb-3 justify-center">
-                <span className="dot" />
-                <span>{isRegister && activeTab === "email" ? "Регистрация" : "Вход"}</span>
-              </div>
-              <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 900, fontSize: 28, color: "var(--ink)" }}>
-                {activeTab === "email" && isRegister ? "Создать аккаунт" : "С возвращением"}
+          <div className="p-8 space-y-4 text-left">
+            <div className="text-center space-y-2 mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                {activeTab === 'email' && isRegister ? "Создать аккаунт" : "С возвращением"}
               </h2>
-              <p className="mt-2 text-sm" style={{ color: "var(--ash)" }}>
-                {activeTab === "email" && isRegister
-                  ? "Начни своё приключение сегодня"
-                  : "Войдите, чтобы продолжить историю"}
+              <p className="text-gray-400 text-sm">
+                {activeTab === 'email' && isRegister ? "Начни своё приключение сегодня" : "Войдите, чтобы продолжить историю"}
               </p>
             </div>
 
             {error && (
-              <div
-                className="flex items-start gap-3 p-4 text-sm"
-                style={{
-                  border: error.includes("подтверждения") ? "1px solid rgba(74,222,128,0.4)" : "1px solid var(--cinnabar)",
-                  background: error.includes("подтверждения") ? "rgba(74,222,128,0.08)" : "rgba(232,93,79,0.08)",
-                  color: error.includes("подтверждения") ? "#86efac" : "var(--cinnabar)",
-                  borderRadius: 2,
-                }}
-              >
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className={`border p-4 rounded-xl text-sm flex items-start gap-3 ${
+                error.includes('подтверждения')
+                  ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                  : 'bg-red-500/10 border-red-500/20 text-red-500'
+              }`}>
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
 
-            {activeTab === "social" ? (
-              <button
-                onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-3 py-3.5 px-6 transition-all"
-                style={{
-                  background: "#fff",
-                  color: "var(--paper)",
-                  borderRadius: 2,
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12,
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                }}
-              >
-                <GoogleIcon />
-                Войти через Google
-              </button>
+            {activeTab === 'social' ? (
+              <div className="space-y-3">
+                <button
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-100 py-3.5 px-6 rounded-2xl font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <GoogleIcon />
+                  Войти через Google
+                </button>
+              </div>
             ) : (
               <form onSubmit={handleEmailAuth} className="space-y-4">
-                <div>
-                  <label className="block mb-2" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ash)" }}>
-                    Email
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Email</label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--ash)" }} />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                     <input
                       required
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@example.com"
-                      className="w-full py-3 pl-11 pr-4 focus:outline-none"
-                      style={inputStyle}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--cinnabar)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--line-strong)")}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-[#E8409A]/50 transition-all"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block mb-2" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ash)" }}>
-                    Пароль
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Пароль</label>
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--ash)" }} />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                     <input
                       required
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full py-3 pl-11 pr-4 focus:outline-none"
-                      style={inputStyle}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--cinnabar)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--line-strong)")}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-[#E8409A]/50 transition-all"
                     />
                   </div>
                 </div>
 
                 {isRegister && (
-                  <div>
-                    <label className="block mb-2" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ash)" }}>
-                      Подтвердите пароль
-                    </label>
+                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Подтвердите пароль</label>
                     <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--ash)" }} />
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                       <input
                         required
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full py-3 pl-11 pr-4 focus:outline-none"
-                        style={inputStyle}
-                        onFocus={(e) => (e.currentTarget.style.borderColor = "var(--cinnabar)")}
-                        onBlur={(e) => (e.currentTarget.style.borderColor = "var(--line-strong)")}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-[#E8409A]/50 transition-all"
                       />
                     </div>
                   </div>
                 )}
 
-                <button type="submit" disabled={isLoading} className="ac-btn cinnabar w-full justify-center disabled:opacity-50">
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : isRegister ? "Зарегистрироваться" : "Войти"}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-[#E8409A] hover:bg-[#d13589] disabled:opacity-50 text-white py-4 rounded-2xl font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isRegister ? "Зарегистрироваться" : "Войти"}
                 </button>
 
                 <div className="text-center pt-2">
                   <button
                     type="button"
                     onClick={() => setIsRegister(!isRegister)}
-                    className="transition-colors"
-                    style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ash)" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--cinnabar)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ash)")}
+                    className="text-sm text-gray-400 hover:text-[#E8409A] transition-colors"
                   >
                     {isRegister ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться"}
                   </button>
@@ -249,30 +198,18 @@ export default function LoginPage() {
               </form>
             )}
 
-            <div className="pt-5 text-center" style={{ borderTop: "1px solid var(--line)" }}>
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2.5"
-                style={{
-                  background: "rgba(232,93,79,0.08)",
-                  border: "1px solid rgba(232,93,79,0.3)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                  color: "var(--cinnabar)",
-                }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--cinnabar)" }} />
-                3 главы бесплатно для каждого
-              </div>
+            <div className="pt-4 border-t border-white/5 text-center">
+              <p className="text-xs text-[#E8409A] font-medium bg-[#E8409A]/5 py-3 rounded-xl inline-block px-6">
+                ✨ 3 главы бесплатно для каждого
+              </p>
             </div>
           </div>
         </div>
 
-        <p className="mt-8" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}>
-          Продолжая, вы соглашаетесь с условиями AniContinue
+        <p className="text-gray-500 text-[10px] md:text-xs">
+          Продолжая, вы соглашаетесь с условиями обслуживания AniContinue
         </p>
       </div>
-    </div>
+    </main>
   );
 }
