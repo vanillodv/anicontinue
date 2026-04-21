@@ -2,29 +2,6 @@
 
 # AniContinue — Project Memory
 
-## ⏳ PENDING (ждёт действий пользователя)
-
-Применить в **Supabase Dashboard → SQL Editor → New query → Run**:
-
-### 1. Миграция 020 — курированные промпты топ-10
-- **Файл:** `supabase/migrations/020_curated_prompts_top10.sql`
-- **Что даёт:** `anime.prompt_template` для 10 топ-тайтлов (AoT, FMA, Chainsaw Man, Demon Slayer, Naruto, One Piece, Your Name, Spirited Away, Death Note, Clannad). Характер героев, тон, запреты. Вшивается в system-prompt → AI меньше путает каноны.
-
-### 2. Активация промпта v3
-Отдельным запросом (не файл):
-```sql
-update ai_prompts set is_active = (version = '3.0-multi-fewshot');
-```
-Без этого активен v2-anti-cliche. v3 — с 3 few-shot примерами (drama AoT / romance Your Name / action HxH).
-
-### 3. Миграция 021 — русификация seed-данных
-- **Файл:** `supabase/migrations/021_humanize_seed_data.sql`
-- **Что даёт:** 10 demo-авторов получают русские ники (Аки, ОТП навсегда, Тоторовна, Полуночник, Кёко-сан, Фонарщик, Рина К., Цукина, Отаку 2099, Канонист) + рандомизация `created_at` их глав по последним 45 дням (в `/community` больше не все главы с одной датой).
-
-**Порядок:** 020 → активация v3 → 021. Индикатор успеха: «Success. No rows returned».
-
----
-
 ## Стек
 - **Frontend/Backend**: Next.js 16 App Router (TypeScript) — **не 15**, см. AGENTS.md
 - **БД + Auth**: Supabase (PostgreSQL + RLS + Auth)
@@ -124,9 +101,9 @@ id, user_id, anime_id, tokens_used, cost_usd, created_at
 | 016_security_hardening_v2.sql | ✅ выполнена | auth.uid check в consume_chapter, RLS на payment_logs, trigger `validate_username`, RPC `log_admin_action` |
 | 017_content_fixes.sql | ✅ выполнена | Орфография title_ru (Твоё/Унесённые — ё, а не е) |
 | 018_better_prompt.sql | ✅ выполнена | ai_prompts v2.0-anti-cliche |
-| 019_prompt_v3_multi_fewshot.sql | ✅ выполнена | v3.0 с 3 few-shot примерами (drama AoT / romance Your Name / action HxH). Активация: `update ai_prompts set is_active = (version = '3.0-multi-fewshot')` |
-| 020_curated_prompts_top10.sql | ⏳ ожидает применения user | `prompt_template` для топ-10: Эдвард не высокий, Санджи не бьёт женщин, Ушио ≠ Ушуу |
-| 021_humanize_seed_data.sql | ⏳ ожидает применения user | Русификация ников 10 seed-авторов (Аки, ОТП навсегда, Тоторовна, Полуночник, Кёко-сан, Фонарщик, Рина К., Цукина, Отаку 2099, Канонист) + рандом `created_at` глав по последним 45 дням |
+| 019_prompt_v3_multi_fewshot.sql | ✅ выполнена + активирована | v3.0 с 3 few-shot примерами (drama AoT / romance Your Name / action HxH). Активация: `update ai_prompts set is_active = (version = '3.0-multi-fewshot')` |
+| 020_curated_prompts_top10.sql | ✅ выполнена | `prompt_template` для топ-10 (FMA Братство, Врата Штейна, HxH, AoT, Кланнад, Форма голоса, Унесённые призраками, Твоё имя, Первый шаг + ещё). Проверено через API: 9 тайтлов в топ-20 имеют template. |
+| 021_humanize_seed_data.sql | ✅ выполнена | Русификация ников 10 seed-авторов (Аки, ОТП навсегда, Тоторовна, Полуночник, Кёко-сан, Фонарщик, Рина К., Цукина, Отаку 2099, Канонист) + рандом `created_at` глав. Проверено: 11 разных дат в топ-40 /community. |
 
 ### Как применять миграции
 Supabase Dashboard → SQL Editor → вставить содержимое файла → Run. В PowerShell/bash НЕ запускать.
@@ -269,6 +246,7 @@ git push origin HEAD:main
 Текущая модель монетизации: **Boosty** (ручное начисление через `/admin/users/[id]/grant` после доната). Страница `/pricing` — только CTA на Boosty + FAQ, без карточек сумм/тарифов.
 
 ## История деплоев (последние ключевые)
+- `b4701de` seo+img: починить sitemap/robots (vercel.app→anicontinue.ru) и проксировать остальные постеры (og:image соцсетей, /profile, /admin)
 - `9e9a716` script: автоперевод synopsis через Claude Haiku (188/0 переведено)
 - `22cfdbb` fix(img): проксировать myanimelist.net, а не только cdn.*
 - `7fe9815` docs: зафиксировать текущее состояние проекта в CLAUDE.md
@@ -277,3 +255,14 @@ git push origin HEAD:main
 - `878f86d` seed-script: max_tokens 3500→5000 + толерантный парсер + retry
 - `56c5911` script: seed-community-chapters — 10 demo-авторов × 30 глав
 - `b628f9c` script: автоперевод title_ru через Claude Haiku
+
+## Критические SEO-моменты (урок)
+- В Vercel установлена `NEXT_PUBLIC_APP_URL`, НЕ `NEXT_PUBLIC_SITE_URL`.
+  `sitemap.ts` и `robots.ts` должны читать именно `APP_URL` с fallback
+  на прод-домен. Любой fallback на `*.vercel.app` = Google индексирует
+  второй домен → дубль контента, штраф.
+- `og:image` для соцсетей ВСЕГДА через `proxyImage()` → `/api/img?url=...`.
+  MAL hotlink-режет прямые запросы без Referer → Telegram/Twitter/VK
+  увидят 403 вместо превью.
+- `metadataBase: new URL("https://www.anicontinue.ru")` в `layout.tsx`
+  нужен чтобы относительные `/api/img?url=...` стали абсолютными в og:image.
