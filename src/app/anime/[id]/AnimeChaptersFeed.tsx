@@ -88,10 +88,7 @@ export default async function AnimeChaptersFeed({ animeId, animeName }: Props) {
               <Link
                 key={ch.id}
                 href={`/chapter/${ch.id}`}
-                className="group relative flex flex-col gap-3 p-6 transition-all"
-                style={{ background: "var(--paper-2)", border: "1px solid var(--line)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--cinnabar)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--line)"; }}
+                className="group relative flex flex-col gap-3 p-6 ac-card"
               >
                 <div
                   style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--cinnabar)" }}

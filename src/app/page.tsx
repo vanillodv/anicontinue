@@ -385,10 +385,8 @@ export default async function Home() {
                 <Link
                   key={ch.id}
                   href={`/chapter/${ch.id}`}
-                  className="group relative grid gap-5 transition-all"
-                  style={{ gridTemplateColumns: "70px 1fr", background: "var(--inv-card)", border: "1px solid var(--inv-line)", padding: 28 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#fbf7ec"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 30px -16px rgba(14,11,10,0.35)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "var(--inv-card)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                  className="group relative grid gap-5 ac-card-inv"
+                  style={{ gridTemplateColumns: "70px 1fr", padding: 28 }}
                 >
                   <div className="w-[70px] h-[100px] overflow-hidden" style={{ borderRadius: 1, background: "#e7dfcf" }}>
                     {ch.anime?.poster_url && (

@@ -199,3 +199,30 @@ body::before {
 /* Тонкая линия для разделителей, которая не тонет в тёмном фоне */
 .ac-line-top { border-top: 1px solid var(--line-strong); }
 .ac-line-bottom { border-bottom: 1px solid var(--line); }
+
+/* Карточка-остров с hover-подсветкой. Для server-компонентов
+   (там нельзя onMouseEnter). Использовать вместо JS-handler'ов. */
+.ac-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.ac-card:hover {
+  border-color: var(--cinnabar);
+}
+.ac-card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -16px rgba(14, 11, 10, 0.35);
+}
+
+/* Инверсная карточка (для светлого острова chapters) */
+.ac-card-inv {
+  background: var(--inv-card);
+  border: 1px solid var(--inv-line);
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.ac-card-inv:hover {
+  background: #fbf7ec;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -16px rgba(14, 11, 10, 0.35);
+}
