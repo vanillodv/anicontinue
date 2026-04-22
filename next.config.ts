@@ -10,6 +10,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // standalone — Next собирает минимальный production-сервер в .next/standalone,
+  // необходим для Docker/Cloud.ru/Timeweb. На Vercel игнорируется.
+  output: 'standalone',
   turbopack: {
     root: __dirname,
   },

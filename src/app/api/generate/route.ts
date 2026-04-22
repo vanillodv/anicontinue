@@ -36,10 +36,12 @@ async function refundChapter(userId: string) {
 }
 
 // 60s хватает с запасом на 3500 токенов при Haiku 4.5 (~100 tok/s = 35s).
-// На Vercel Hobby Edge Functions поддерживают до 300s, стриминг начинает
-// отдавать первые байты за <5s — клиент видит прогресс.
+// runtime='nodejs' — совместим с любым хостингом (Vercel, Cloud.ru Evolution,
+// Timeweb, Selectel, обычный VPS). Edge-runtime был привязан к Vercel.
+// Стриминг работает одинаково через ReadableStream на обоих runtime.
 export const maxDuration = 60;
-export const runtime = 'edge';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',

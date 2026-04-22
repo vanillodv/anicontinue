@@ -1,0 +1,46 @@
+# Сборка в Docker — исключаем лишнее, чтобы образ был маленьким
+# и не утечь секретам
+
+node_modules
+.next
+.git
+.github
+.vercel
+.env
+.env*.local
+.env.local
+.env.development
+.env.production.local
+
+# Dev-артефакты
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+.pnp.*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Документация и скрипты (не нужны в runtime-образе)
+README.md
+CLAUDE.md
+AGENTS.md
+docs
+audit
+scripts/*.mjs
+
+# Тесты и конфиги инструментов разработки
+coverage
+.eslintcache
+
+# Локальные Claude/Anthropic-артефакты
+.claude
