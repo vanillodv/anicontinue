@@ -1,0 +1,61 @@
+name: Build and publish Docker image
+
+# Запускаем на каждый push в main. Образ уходит в GitHub Container Registry (ghcr.io).
+# Cloud.ru Evolution Container Service потом тянет его по URI.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # можно запустить вручную из вкладки Actions
+
+env:
+  REGISTRY: ghcr.io
+  # lowercase — ghcr требует lowercase в image path
+  IMAGE_NAME: vanillodv/anicontinue
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # обязательно для публикации в ghcr
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Публичные env на этапе билда. Приватные (SERVICE_ROLE_KEY,
+          # ANTHROPIC_API_KEY) прокидываются в runtime через Cloud.ru
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_APP_URL=https://www.anicontinue.ru
