@@ -1,0 +1,17 @@
+name: Ежедневная агрегация аналитики
+
+on:
+  schedule:
+    # Каждый день в 03:00 UTC (06:00 MSK)
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Вызов /api/cron/aggregate
+        run: |
+          curl -sf -X GET \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://www.anicontinue.ru/api/cron/aggregate

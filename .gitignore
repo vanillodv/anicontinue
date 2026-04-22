@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.production намеренно закоммичен — содержит только NEXT_PUBLIC_ переменные
+# (публичные значения, которые всё равно попадают в JS-бандл).
+# Секреты (SERVICE_ROLE_KEY, ANTHROPIC_API_KEY) — только в GitHub Secrets / YC env.
+!.env.production
 
 # vercel
 .vercel

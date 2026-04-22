@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code')
 
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || requestUrl.host;
-  const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'http');
+  const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https');
   const origin = `${proto}://${host}`;
 
   if (code) {
