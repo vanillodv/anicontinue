@@ -27,13 +27,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(url, {
+    // MAL CDN блокирует прямые запросы с IP Яндекс Облака.
+    // Гоним через wsrv.nl (Cloudflare CDN) — MAL его не блокирует,
+    // а браузер по-прежнему видит только запросы на наш домен (self).
+    const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=webp&maxage=7d`;
+    const res = await fetch(wsrvUrl, {
       headers: {
-        'Referer': 'https://myanimelist.net/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+        'Accept': 'image/webp,image/*,*/*;q=0.8',
       },
-      // кешируем на 24 часа на сервере
+      // кешируем на 24 часа на стороне сервера
       next: { revalidate: 86400 },
     });
 
