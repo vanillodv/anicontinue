@@ -62,5 +62,4 @@ jobs:
             --environment "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             --environment "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" \
             --environment "ANTHROPIC_BASE_URL=${{ secrets.ANTHROPIC_BASE_URL }}" \
-            --environment "ANTHROPIC_PROXY_SECRET=${{ secrets.ANTHROPIC_PROXY_SECRET }}" \
             --environment "CRON_SECRET=${{ secrets.CRON_SECRET }}"

@@ -49,9 +49,6 @@ export const dynamic = 'force-dynamic';
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
   baseURL: process.env.ANTHROPIC_BASE_URL || undefined,
-  defaultHeaders: process.env.ANTHROPIC_PROXY_SECRET
-    ? { 'x-anicontinue-proxy-secret': process.env.ANTHROPIC_PROXY_SECRET }
-    : undefined,
 });
 
 // Порог rate limit: max 5 генераций в минуту на пользователя + 10 в минуту на IP

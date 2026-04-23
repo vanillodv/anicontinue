@@ -3,31 +3,23 @@
 // "Request not allowed". CF Worker выполняется на edge Cloudflare (не РФ),
 // поэтому для Anthropic запросы идут как разрешённые.
 //
-// Shared secret: чтобы любой проходимец, узнавший URL воркера, не гонял
-// через нас свои запросы и не съедал наш бесплатный CF-тир, принимаем
-// запросы только с header `x-anicontinue-proxy-secret` = env.PROXY_SECRET.
+// Защита: полагаемся на непредсказуемость субдомена воркера и приватность
+// репозитория. Без валидного Anthropic API-ключа через воркер всё равно
+// ничего не пройдёт (Anthropic вернёт 401). Shared-secret header убран
+// из-за трудностей с синхронизацией в двух системах (CF + YC).
 
 const TARGET_ORIGIN = 'https://api.anthropic.com';
 
-export interface Env {
-  PROXY_SECRET: string;
-}
-
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    if (request.headers.get('x-anicontinue-proxy-secret') !== env.PROXY_SECRET) {
-      return new Response('Forbidden', { status: 403 });
-    }
-
+  async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const target = TARGET_ORIGIN + url.pathname + url.search;
 
-    // Копируем заголовки, убираем наш shared secret и Host (CF его подставит сам).
+    // Копируем заголовки, убираем Host (CF его подставит сам для нового хоста).
     const headers = new Headers(request.headers);
-    headers.delete('x-anicontinue-proxy-secret');
     headers.delete('host');
 
-    // Для GET/HEAD тела нет, а duplex:'half' требуется CF Workers только
+    // Для GET/HEAD тела нет, а duplex:'half' CF Workers требует только
     // когда реально передаётся поток тела.
     const init: RequestInit = { method: request.method, headers };
     if (request.method !== 'GET' && request.method !== 'HEAD') {

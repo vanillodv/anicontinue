@@ -16,11 +16,13 @@ Cloudflare edge — не в РФ, поэтому запросы проходят
 
 ## Безопасность
 
-Воркер принимает только запросы с заголовком
-`x-anicontinue-proxy-secret: <PROXY_SECRET>`. Без него возвращает 403.
-Это отсекает случайных проходимцев, которые узнают URL, — они не смогут
-утилизировать наш бесплатный CF-тир и не будут генерить нагрузку на
-наш Anthropic API-ключ.
+Воркер сейчас открытый (без shared secret). Практический риск минимален:
+URL субдомена случайный, репозиторий приватный, а без валидного
+Anthropic API-ключа через прокси всё равно ничего не пройдёт — Anthropic
+сам вернёт 401. Если в логах YC/GitHub засветится URL воркера и пойдёт
+абуз — добавим обратно shared-secret проверку. Код защиты был раньше,
+но синхронизация значения в двух системах (CF + YC) оказалась ненадёжной
+(PowerShell clipboard paste искажал байты).
 
 ## Деплой (один раз)
 
@@ -29,14 +31,8 @@ Cloudflare edge — не в РФ, поэтому запросы проходят
 ```powershell
 cd cloudflare-worker
 npm install
-# Войти в свой Cloudflare аккаунт (открывает браузер)
-npx wrangler login
-# Сгенерить shared secret
-$secret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 48 | % {[char]$_})
-Write-Output "PROXY_SECRET: $secret"
-# Положить secret в Cloudflare (интерактивно вставить значение)
-echo $secret | npx wrangler secret put PROXY_SECRET
-# Задеплоить
+# API-токен удобнее OAuth: dash.cloudflare.com/profile/api-tokens → Create Token → Edit Cloudflare Workers
+$env:CLOUDFLARE_API_TOKEN = "<твой_cf_api_token>"
 npx wrangler deploy
 ```
 
@@ -45,27 +41,22 @@ npx wrangler deploy
 
 ## Настройка YC-контейнера
 
-В **GitHub → Settings → Secrets and variables → Actions** добавить два
-новых secret'а:
+В **GitHub → Settings → Secrets and variables → Actions** добавить один
+secret:
 
 | Имя | Значение |
 |---|---|
 | `ANTHROPIC_BASE_URL` | URL воркера из предыдущего шага |
-| `ANTHROPIC_PROXY_SECRET` | тот же `$secret` что положили в воркер |
 
 После пуша в `main` workflow `Deploy → YC Serverless Container` сам
-подкинет их в env контейнера, новая ревизия поедет с прокси.
+подкинет его в env контейнера, новая ревизия поедет с прокси.
 
 ## Проверка
 
 ```bash
-# Без секрета — должен вернуть 403
-curl -i https://anicontinue-anthropic-proxy.<subdomain>.workers.dev/v1/messages
-
-# С правильным секретом и Anthropic-ключом — должен вернуть нормальный
-# ответ Anthropic (или 401 если ключ битый — главное, не 403 от воркера)
+# С Anthropic-ключом — должен вернуть нормальный ответ Anthropic (или 401
+# если ключ битый). Без ключа Anthropic сам ответит 401.
 curl -i https://anicontinue-anthropic-proxy.<subdomain>.workers.dev/v1/messages \
-  -H "x-anicontinue-proxy-secret: $PROXY_SECRET" \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
   -H "anthropic-version: 2023-06-01" \
   -H "content-type: application/json" \
