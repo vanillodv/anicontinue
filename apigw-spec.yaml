@@ -1,0 +1,46 @@
+openapi: 3.0.0
+info:
+  title: AniContinue
+  version: 1.0.0
+# ВАЖНО: YC API Gateway по умолчанию НЕ форвардит заголовки запроса,
+# кроме User-Agent (см. docs: "По умолчанию заголовки, кроме User-Agent,
+# и query-параметры исходного запроса не передаются"). Без явного
+# headers: {'*': '*'} Cookie-заголовок режется на уровне шлюза — сервер
+# никогда не видит Supabase session cookies, /api/generate возвращает 401.
+paths:
+  /:
+    x-yc-apigateway-any-method:
+      x-yc-apigateway-integration:
+        type: http
+        url: https://bbaauig6dsdkj15nrto0.containers.yandexcloud.net/
+        headers:
+          '*': '*'
+          Host: bbaauig6dsdkj15nrto0.containers.yandexcloud.net
+          X-Forwarded-Host: www.anicontinue.ru
+          X-Forwarded-Proto: https
+        query:
+          '*': '*'
+        timeouts:
+          read: 90
+          connect: 5
+  /{proxy+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: proxy
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: http
+        url: https://bbaauig6dsdkj15nrto0.containers.yandexcloud.net/{proxy}
+        headers:
+          '*': '*'
+          Host: bbaauig6dsdkj15nrto0.containers.yandexcloud.net
+          X-Forwarded-Host: www.anicontinue.ru
+          X-Forwarded-Proto: https
+        query:
+          '*': '*'
+        timeouts:
+          read: 90
+          connect: 5
