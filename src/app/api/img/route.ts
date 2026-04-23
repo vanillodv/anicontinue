@@ -26,34 +26,56 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
   }
 
-  try {
-    // MAL CDN блокирует прямые запросы с IP Яндекс Облака.
-    // Гоним через wsrv.nl (Cloudflare CDN) — MAL его не блокирует,
-    // а браузер по-прежнему видит только запросы на наш домен (self).
-    const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=webp&maxage=7d`;
-    const res = await fetch(wsrvUrl, {
-      headers: {
-        'Accept': 'image/webp,image/*,*/*;q=0.8',
-      },
-      // кешируем на 24 часа на стороне сервера
-      next: { revalidate: 86400 },
-    });
+  // Пытаемся достать постер несколькими путями по очереди.
+  // MAL CDN геоблокирует IP Яндекс.Облака + wsrv.nl недавно добавил
+  // myanimelist.net в TLD-blocklist. Оставляем fallback-цепочку.
+  const attempts: Array<{ name: string; url: string }> = [
+    // 1. Прямой MAL — вдруг отдаст. Дёшево если работает.
+    {
+      name: 'direct',
+      url,
+    },
+    // 2. codetabs proxy — на момент деплоя отдаёт MAL корректно (image/jpeg, image/webp).
+    {
+      name: 'codetabs',
+      url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    },
+  ];
 
-    if (!res.ok) {
-      return new NextResponse(null, { status: res.status });
+  for (const a of attempts) {
+    try {
+      const res = await fetch(a.url, {
+        headers: {
+          'Accept': 'image/avif,image/webp,image/*,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+          'Referer': 'https://myanimelist.net/',
+        },
+        // кешируем на сутки на стороне сервера
+        next: { revalidate: 86400 },
+      });
+
+      if (!res.ok) continue;
+
+      const contentType = res.headers.get('Content-Type') || '';
+      // codetabs иногда заворачивает ошибки в text/html — отбрасываем
+      if (!contentType.startsWith('image/')) continue;
+
+      const buffer = await res.arrayBuffer();
+      if (buffer.byteLength < 100) continue; // слишком маленький = не картинка
+
+      return new NextResponse(buffer, {
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+          'Access-Control-Allow-Origin': '*',
+          'X-Img-Source': a.name,
+        },
+      });
+    } catch {
+      // пробуем следующий вариант
+      continue;
     }
-
-    const buffer = await res.arrayBuffer();
-    const contentType = res.headers.get('Content-Type') || 'image/jpeg';
-
-    return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch {
-    return new NextResponse(null, { status: 502 });
   }
+
+  return new NextResponse(null, { status: 502 });
 }

@@ -83,7 +83,16 @@ export async function POST(req: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      await logGenError(null, null, 'auth_error', authError?.message || 'no user');
+      // Диагностика: какие именно cookies пришли — это отвечает на вопрос
+      // «браузер не шлёт куки» vs «шлёт, но Supabase JWT протух».
+      const cookieHeader = req.headers.get('cookie') || '';
+      const sbCookies = cookieHeader
+        .split(';')
+        .map((c) => c.trim().split('=')[0])
+        .filter((n) => n.startsWith('sb-'));
+      const diag = `authError=${authError?.message || 'null'} user=null sbCookies=[${sbCookies.join(',')}] totalCookies=${cookieHeader ? cookieHeader.split(';').length : 0}`;
+      console.error('[generate] auth failed:', diag);
+      await logGenError(null, null, 'auth_error', diag.slice(0, 500));
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
