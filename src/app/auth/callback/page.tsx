@@ -4,11 +4,11 @@
 // где code_verifier доступен (хранится браузерным Supabase-клиентом).
 // Серверный Route Handler не мог его найти, потому что verifier не передавался в cookie.
 
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function AuthCallbackPage() {
+function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const done = useRef(false);
@@ -59,6 +59,10 @@ export default function AuthCallbackPage() {
     handleCallback();
   }, []);
 
+  return null;
+}
+
+function LoadingSpinner() {
   return (
     <div
       className="flex items-center justify-center"
@@ -84,5 +88,14 @@ export default function AuthCallbackPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <CallbackHandler />
+      <LoadingSpinner />
+    </Suspense>
   );
 }
