@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CookieBanner from "@/components/layout/CookieBanner";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { getSiteSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import MaintenancePage from "./maintenance/page";
@@ -97,26 +98,28 @@ export default async function RootLayout({
   const fontVars = `${manrope.variable} ${fraunces.variable} ${jetbrains.variable} ${notoJp.variable}`;
 
   return (
-    <html lang="ru" className={`${fontVars} h-full antialiased`}>
+    <html lang="ru" className={`${fontVars} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
-        {settings.maintenance_mode && !isAdmin ? (
-          <MaintenancePage />
-        ) : (
-          <>
-            <Header initialUser={user} initialRole={role} />
-            {settings.site_notice && (
-              <div className="relative z-20 border-b border-[color:var(--line)] text-center py-2 px-4 text-sm"
-                   style={{ background: "rgba(232,93,79,0.08)", color: "var(--cinnabar)" }}>
-                {settings.site_notice}
-              </div>
-            )}
-            <main className="flex-grow relative z-10">
-              {children}
-            </main>
-            <Footer />
-            <CookieBanner />
-          </>
-        )}
+        <ThemeProvider>
+          {settings.maintenance_mode && !isAdmin ? (
+            <MaintenancePage />
+          ) : (
+            <>
+              <Header initialUser={user} initialRole={role} />
+              {settings.site_notice && (
+                <div className="relative z-20 border-b border-[color:var(--line)] text-center py-2 px-4 text-sm"
+                     style={{ background: "rgba(232,93,79,0.08)", color: "var(--cinnabar)" }}>
+                  {settings.site_notice}
+                </div>
+              )}
+              <main className="flex-grow relative z-10">
+                {children}
+              </main>
+              <Footer />
+              <CookieBanner />
+            </>
+          )}
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { User, LogOut, ChevronDown, Shield, X, Menu, BookOpen, Eye, Wand2, Sparkles, Send } from "lucide-react";
 import Image from "next/image";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/catalog",   label: "Каталог" },
@@ -64,7 +65,7 @@ export default function Header({ initialUser = null, initialRole = null }: Heade
     <>
       <header
         className="sticky top-0 z-50 w-full ac-line-bottom backdrop-blur-md"
-        style={{ background: "rgba(13, 11, 10, 0.72)" }}
+        style={{ background: "var(--header-bg)" }}
       >
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-10 px-5 md:px-11 h-14 md:h-[72px]">
 
@@ -116,17 +117,17 @@ export default function Header({ initialUser = null, initialRole = null }: Heade
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 p-1 pl-2 md:pl-3 transition-colors"
                   style={{ border: "1px solid var(--line-strong)", borderRadius: "2px", background: "transparent" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(var(--rgb-ink),0.05)")}
                   onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
                   <span className="text-[12px] md:text-[13px] tracking-[0.05em] uppercase hidden sm:inline max-w-[100px] truncate" style={{ color: "var(--ink)", fontFamily: "var(--font-mono)" }}>
                     {user.user_metadata.full_name || user.email?.split("@")[0]}
                   </span>
-                  <div className="w-7 h-7 md:w-8 md:h-8 overflow-hidden relative shrink-0" style={{ borderRadius: "2px", border: "1px solid rgba(232,93,79,0.35)" }}>
+                  <div className="w-7 h-7 md:w-8 md:h-8 overflow-hidden relative shrink-0" style={{ borderRadius: "2px", border: "1px solid rgba(var(--rgb-cinnabar),0.35)" }}>
                     {user.user_metadata.avatar_url ? (
                       <Image src={user.user_metadata.avatar_url} alt="Avatar" fill className="object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(232,93,79,0.18)", color: "var(--cinnabar)" }}>
+                      <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(var(--rgb-cinnabar),0.18)", color: "var(--cinnabar)" }}>
                         <User className="w-4 h-4" />
                       </div>
                     )}
@@ -142,21 +143,21 @@ export default function Header({ initialUser = null, initialRole = null }: Heade
                       style={{ background: "var(--paper-2)", border: "1px solid var(--line-strong)", borderRadius: "2px" }}
                     >
                       <Link href="/profile" className="flex items-center gap-3 px-4 py-3 text-[13px] tracking-[0.05em] uppercase transition-colors" style={{ color: "var(--ink)", fontFamily: "var(--font-mono)" }} onClick={() => setDropdownOpen(false)}
-                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(var(--rgb-ink),0.05)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                       >
                         <User className="w-4 h-4" /> Профиль
                       </Link>
                       {isAdmin && (
                         <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[13px] tracking-[0.05em] uppercase transition-colors" style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }} onClick={() => setDropdownOpen(false)}
-                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(223,181,94,0.1)")}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(var(--rgb-gold),0.1)")}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
                           <Shield className="w-4 h-4" /> Админ панель
                         </Link>
                       )}
                       <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 text-[13px] tracking-[0.05em] uppercase transition-colors" style={{ color: "var(--cinnabar)", fontFamily: "var(--font-mono)" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(232,93,79,0.1)")}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(var(--rgb-cinnabar),0.1)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                       >
                         <LogOut className="w-4 h-4" /> Выйти
@@ -173,6 +174,9 @@ export default function Header({ initialUser = null, initialRole = null }: Heade
                 </Link>
               </>
             )}
+
+            {/* Переключатель темы */}
+            <ThemeToggle />
 
             {/* Hamburger — mobile */}
             <button
@@ -210,7 +214,7 @@ export default function Header({ initialUser = null, initialRole = null }: Heade
                   className="flex items-center gap-3 px-4 py-3.5 text-[13px] tracking-[0.1em] uppercase transition-colors"
                   style={{ color: "var(--ink)" }}
                   onClick={() => setMobileOpen(false)}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(var(--rgb-ink),0.05)")}
                   onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
                   {label}
@@ -220,7 +224,7 @@ export default function Header({ initialUser = null, initialRole = null }: Heade
                 onClick={() => { setMobileOpen(false); setHowOpen(true); }}
                 className="w-full flex items-center gap-3 px-4 py-3.5 text-[13px] tracking-[0.1em] uppercase text-left transition-colors"
                 style={{ color: "var(--ink)" }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(242,235,217,0.05)")}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(var(--rgb-ink),0.05)")}
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 Как работает
@@ -279,7 +283,7 @@ export default function Header({ initialUser = null, initialRole = null }: Heade
                 <li key={step} className="flex gap-3 items-start">
                   <div
                     className="shrink-0 w-10 h-10 flex items-center justify-center"
-                    style={{ background: "rgba(232,93,79,0.12)", border: "1px solid rgba(232,93,79,0.4)", borderRadius: "2px", color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900 }}
+                    style={{ background: "rgba(var(--rgb-cinnabar),0.12)", border: "1px solid rgba(var(--rgb-cinnabar),0.4)", borderRadius: "2px", color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900 }}
                   >
                     {step}
                   </div>
