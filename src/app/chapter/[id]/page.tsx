@@ -22,15 +22,26 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
   const title = ch.title || "Без названия";
   const animeName = anime?.title_ru || anime?.title_en || "Аниме";
   const snippet = ((ch.content as string) || "").replace(/\s+/g, " ").slice(0, 155).trim();
+  const description = snippet || `Фанфик-глава по «${animeName}».`;
+  const canonicalUrl = `https://www.anicontinue.ru/chapter/${id}`;
   return {
     title: `${title} — ${animeName}`,
-    description: snippet || `Фанфик-глава по «${animeName}».`,
+    description,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title: `${title} · ${animeName}`,
-      description: snippet,
+      description,
+      url: canonicalUrl,
+      type: 'article',
       // Жмём через /api/img — MAL hotlink-режет прямые запросы без Referer,
       // соцсети бы получили 403 и не отрисовали превью.
       images: anime?.poster_url ? [{ url: proxyImage(anime.poster_url)!, alt: animeName }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} · ${animeName}`,
+      description,
+      images: anime?.poster_url ? [proxyImage(anime.poster_url)!] : undefined,
     },
   };
 }

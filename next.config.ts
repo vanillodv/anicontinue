@@ -1,11 +1,31 @@
 import type { NextConfig } from "next";
 
+// Supabase project host — используется в CSP для connect-src и img-src
+const SUPABASE_HOST = 'zafbjeslpkprdqaiynqs.supabase.co';
+
+const csp = [
+  "default-src 'self'",
+  // Next.js использует inline-скрипты для hydration; 'unsafe-eval' нужен для dev-режима
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // Inline-стили из JSX style={}, шрифты self-hosted через next/font
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  // Картинки: MAL CDN (постеры), Google аватары, Supabase Storage
+  `img-src 'self' data: blob: https://cdn.myanimelist.net https://myanimelist.net https://lh3.googleusercontent.com https://${SUPABASE_HOST}`,
+  // XHR/fetch: Supabase (REST + realtime)
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}`,
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join('; ');
+
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Content-Security-Policy', value: csp },
 ];
 
 const nextConfig: NextConfig = {

@@ -7,7 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient();
 
   const [{ data: anime }, { data: chapters }] = await Promise.all([
-    supabase.from('anime').select('id, cached_at').limit(200),
+    supabase.from('anime').select('id, cached_at').limit(500),
     supabase.from('chapters').select('id, created_at').eq('is_public', true).eq('is_deleted', false).limit(500),
   ]);
 

@@ -22,14 +22,25 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
   if (!anime) return { title: "Аниме не найдено" };
   const title = anime.title_ru || anime.title_en || "Аниме";
   const synopsisSnippet = (anime.synopsis || "").slice(0, 155);
+  const canonicalUrl = `https://www.anicontinue.ru/anime/${id}`;
+  const description = synopsisSnippet || `Создай фанфик-главу по «${title}» вместе с AI.`;
   return {
     title,
-    description: synopsisSnippet || `Создай фанфик-главу по «${title}» вместе с AI.`,
+    description,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title: `${title} — AniContinue`,
-      description: synopsisSnippet,
+      description,
+      url: canonicalUrl,
+      type: 'website',
       // MAL hotlink-режет прямые запросы. Для og:image проксируем через /api/img.
       images: anime.poster_url ? [{ url: proxyImage(anime.poster_url)!, alt: title }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} — AniContinue`,
+      description,
+      images: anime.poster_url ? [proxyImage(anime.poster_url)!] : undefined,
     },
   };
 }
