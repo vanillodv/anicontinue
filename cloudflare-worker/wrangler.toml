@@ -1,0 +1,6 @@
+name = "anicontinue-anthropic-proxy"
+main = "src/worker.ts"
+compatibility_date = "2024-11-06"
+
+# PROXY_SECRET задаётся через `wrangler secret put PROXY_SECRET` — хранится
+# шифрованным у Cloudflare, в коде/репе не лежит.

@@ -43,8 +43,15 @@ export const maxDuration = 60;
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Прокси через Cloudflare Worker: Anthropic отдаёт 403 "Request not allowed"
+// напрямую с YC-контейнера (РФ IP). Worker живёт на CF edge — запросы идут
+// от не-РФ адреса. Если ANTHROPIC_BASE_URL не задан — работаем напрямую.
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
+  baseURL: process.env.ANTHROPIC_BASE_URL || undefined,
+  defaultHeaders: process.env.ANTHROPIC_PROXY_SECRET
+    ? { 'x-anicontinue-proxy-secret': process.env.ANTHROPIC_PROXY_SECRET }
+    : undefined,
 });
 
 // Порог rate limit: max 5 генераций в минуту на пользователя + 10 в минуту на IP
