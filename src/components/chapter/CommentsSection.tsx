@@ -200,11 +200,11 @@ export default function CommentsSection({ chapterId }: CommentsSectionProps) {
         <div className="space-y-5">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse flex gap-3">
-              <div className="w-9 h-9 shrink-0" style={{ background: "rgba(242,235,217,0.08)", borderRadius: 2 }} />
+              <div className="w-9 h-9 shrink-0" style={{ background: "rgba(var(--rgb-ink),0.08)", borderRadius: 2 }} />
               <div className="flex-1 space-y-2 pt-1">
-                <div className="h-3 w-28" style={{ background: "rgba(242,235,217,0.08)" }} />
-                <div className="h-4 w-full" style={{ background: "rgba(242,235,217,0.05)" }} />
-                <div className="h-4 w-2/3" style={{ background: "rgba(242,235,217,0.05)" }} />
+                <div className="h-3 w-28" style={{ background: "rgba(var(--rgb-ink),0.08)" }} />
+                <div className="h-4 w-full" style={{ background: "rgba(var(--rgb-ink),0.05)" }} />
+                <div className="h-4 w-2/3" style={{ background: "rgba(var(--rgb-ink),0.05)" }} />
               </div>
             </div>
           ))}
@@ -217,8 +217,8 @@ export default function CommentsSection({ chapterId }: CommentsSectionProps) {
           <div
             className="inline-flex items-center justify-center w-12 h-12 mb-3"
             style={{
-              background: "rgba(232,93,79,0.1)",
-              border: "1px solid rgba(232,93,79,0.35)",
+              background: "rgba(var(--rgb-cinnabar),0.1)",
+              border: "1px solid rgba(var(--rgb-cinnabar),0.35)",
               color: "var(--cinnabar)",
               fontFamily: "var(--font-jp)",
               fontWeight: 900,
@@ -239,8 +239,8 @@ export default function CommentsSection({ chapterId }: CommentsSectionProps) {
               <div
                 className="w-10 h-10 flex items-center justify-center shrink-0"
                 style={{
-                  background: "rgba(232,93,79,0.12)",
-                  border: "1px solid rgba(232,93,79,0.3)",
+                  background: "rgba(var(--rgb-cinnabar),0.12)",
+                  border: "1px solid rgba(var(--rgb-cinnabar),0.3)",
                   color: "var(--cinnabar)",
                   borderRadius: 2,
                 }}

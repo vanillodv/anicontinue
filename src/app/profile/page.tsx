@@ -54,13 +54,13 @@ export default async function ProfilePage() {
           style={{
             border: "1px solid var(--line-strong)",
             borderRadius: 2,
-            boxShadow: "0 0 40px rgba(232,93,79,0.18)",
+            boxShadow: "0 0 40px rgba(var(--rgb-cinnabar),0.18)",
           }}
         >
           {user.user_metadata.avatar_url ? (
             <Image src={user.user_metadata.avatar_url} alt="Avatar" fill className="object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(232,93,79,0.12)", color: "var(--cinnabar)" }}>
+            <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(var(--rgb-cinnabar),0.12)", color: "var(--cinnabar)" }}>
               <User className="w-10 h-10" />
             </div>
           )}
@@ -171,7 +171,7 @@ export default async function ProfilePage() {
           >
             <div
               className="w-14 h-14 flex items-center justify-center"
-              style={{ background: "rgba(232,93,79,0.1)", border: "1px solid rgba(232,93,79,0.35)", color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 26 }}
+              style={{ background: "rgba(var(--rgb-cinnabar),0.1)", border: "1px solid rgba(var(--rgb-cinnabar),0.35)", color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 26 }}
             >
               続
             </div>

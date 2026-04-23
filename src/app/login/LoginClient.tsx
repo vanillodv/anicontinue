@@ -99,7 +99,7 @@ export default function LoginPage() {
               style={{
                 color: activeTab === "social" ? "var(--cinnabar)" : "var(--ash)",
                 borderBottom: activeTab === "social" ? "2px solid var(--cinnabar)" : "2px solid transparent",
-                background: activeTab === "social" ? "rgba(232,93,79,0.05)" : "transparent",
+                background: activeTab === "social" ? "rgba(var(--rgb-cinnabar),0.05)" : "transparent",
               }}
             >
               Соцсети
@@ -110,7 +110,7 @@ export default function LoginPage() {
               style={{
                 color: activeTab === "email" ? "var(--cinnabar)" : "var(--ash)",
                 borderBottom: activeTab === "email" ? "2px solid var(--cinnabar)" : "2px solid transparent",
-                background: activeTab === "email" ? "rgba(232,93,79,0.05)" : "transparent",
+                background: activeTab === "email" ? "rgba(var(--rgb-cinnabar),0.05)" : "transparent",
               }}
             >
               Email
@@ -138,7 +138,7 @@ export default function LoginPage() {
                 className="flex items-start gap-3 p-4 text-sm"
                 style={{
                   border: error.includes("подтверждения") ? "1px solid rgba(74,222,128,0.4)" : "1px solid var(--cinnabar)",
-                  background: error.includes("подтверждения") ? "rgba(74,222,128,0.08)" : "rgba(232,93,79,0.08)",
+                  background: error.includes("подтверждения") ? "rgba(74,222,128,0.08)" : "rgba(var(--rgb-cinnabar),0.08)",
                   color: error.includes("подтверждения") ? "#86efac" : "var(--cinnabar)",
                   borderRadius: 2,
                 }}
@@ -253,8 +253,8 @@ export default function LoginPage() {
               <div
                 className="inline-flex items-center gap-2 px-4 py-2.5"
                 style={{
-                  background: "rgba(232,93,79,0.08)",
-                  border: "1px solid rgba(232,93,79,0.3)",
+                  background: "rgba(var(--rgb-cinnabar),0.08)",
+                  border: "1px solid rgba(var(--rgb-cinnabar),0.3)",
                   fontFamily: "var(--font-mono)",
                   fontSize: 10,
                   letterSpacing: "0.2em",

@@ -37,7 +37,7 @@ export default function AnimeCard({ anime, isLoading }: AnimeCardProps) {
         style={{
           borderRadius: 2,
           background: "var(--paper-2)",
-          boxShadow: "0 10px 30px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(242,235,217,0.06)",
+          boxShadow: "0 10px 30px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(var(--rgb-ink),0.06)",
         }}
       >
         {showImage ? (

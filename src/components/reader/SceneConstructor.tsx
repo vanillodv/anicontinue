@@ -346,8 +346,8 @@ export default function SceneConstructor({
                   <div
                     className="p-4"
                     style={{
-                      background: "rgba(232,93,79,0.06)",
-                      border: "1px solid rgba(232,93,79,0.35)",
+                      background: "rgba(var(--rgb-cinnabar),0.06)",
+                      border: "1px solid rgba(var(--rgb-cinnabar),0.35)",
                       borderLeft: "3px solid var(--cinnabar)",
                     }}
                   >
@@ -409,7 +409,7 @@ export default function SceneConstructor({
                           onClick={() => setFormData({ ...formData, sceneType: key as "continuation" | "alternative" })}
                           className="p-4 text-left flex items-center gap-3 transition-all"
                           style={{
-                            background: active ? "rgba(232,93,79,0.08)" : "transparent",
+                            background: active ? "rgba(var(--rgb-cinnabar),0.08)" : "transparent",
                             border: `1px solid ${active ? "var(--cinnabar)" : "var(--line-strong)"}`,
                             borderRadius: 2,
                           }}
@@ -471,8 +471,8 @@ export default function SceneConstructor({
                     {customCharacters.length > 0 && (
                       <span
                         style={{
-                          background: "rgba(232,93,79,0.15)",
-                          border: "1px solid rgba(232,93,79,0.35)",
+                          background: "rgba(var(--rgb-cinnabar),0.15)",
+                          border: "1px solid rgba(var(--rgb-cinnabar),0.35)",
                           color: "var(--cinnabar)",
                           padding: "2px 8px",
                           fontFamily: "var(--font-mono)",
@@ -510,8 +510,8 @@ export default function SceneConstructor({
                               <div
                                 className="w-8 h-8 flex items-center justify-center shrink-0"
                                 style={{
-                                  background: "rgba(232,93,79,0.15)",
-                                  border: "1px solid rgba(232,93,79,0.35)",
+                                  background: "rgba(var(--rgb-cinnabar),0.15)",
+                                  border: "1px solid rgba(var(--rgb-cinnabar),0.35)",
                                   color: "var(--cinnabar)",
                                   fontFamily: "var(--font-serif)",
                                   fontWeight: 900,
@@ -609,7 +609,7 @@ export default function SceneConstructor({
                             className="w-12 h-12 flex items-center justify-center transition-colors duration-500"
                             style={{
                               border: `2px solid ${active ? "var(--cinnabar)" : "var(--line-strong)"}`,
-                              background: active ? "rgba(232,93,79,0.12)" : "transparent",
+                              background: active ? "rgba(var(--rgb-cinnabar),0.12)" : "transparent",
                               color: active ? "var(--cinnabar)" : "var(--ash)",
                               fontFamily: "var(--font-jp)",
                               fontWeight: 900,
@@ -704,7 +704,7 @@ export default function SceneConstructor({
               <div className="py-16 flex flex-col items-center text-center space-y-5">
                 <div
                   className="w-14 h-14 flex items-center justify-center"
-                  style={{ background: "rgba(232,93,79,0.12)", border: "1px solid var(--cinnabar)", color: "var(--cinnabar)" }}
+                  style={{ background: "rgba(var(--rgb-cinnabar),0.12)", border: "1px solid var(--cinnabar)", color: "var(--cinnabar)" }}
                 >
                   <AlertCircle className="w-7 h-7" />
                 </div>
@@ -729,7 +729,7 @@ export default function SceneConstructor({
           {status === "idle" && (
             <div
               className="px-5 md:px-7 py-5 space-y-4"
-              style={{ borderTop: "1px solid var(--line-strong)", background: "rgba(242,235,217,0.02)" }}
+              style={{ borderTop: "1px solid var(--line-strong)", background: "rgba(var(--rgb-ink),0.02)" }}
             >
               <label className="flex items-center gap-3 cursor-pointer group select-none">
                 <div

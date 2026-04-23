@@ -141,7 +141,7 @@ export default async function Home() {
                   zIndex: -1,
                   opacity: 0.9,
                   transform: "skewX(-6deg)",
-                  boxShadow: "0 0 24px rgba(232,93,79,0.4)",
+                  boxShadow: "0 0 24px rgba(var(--rgb-cinnabar),0.4)",
                 }}
               />
             </span>
@@ -226,7 +226,7 @@ export default async function Home() {
                 style={{
                   ...rest,
                   borderRadius: 2,
-                  boxShadow: "0 30px 60px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(242,235,217,0.08)",
+                  boxShadow: "0 30px 60px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(var(--rgb-ink),0.08)",
                   transform: `rotate(${deg}deg)`,
                   zIndex: z,
                   animation: `ac-rise-in 1.1s cubic-bezier(0.2,0.9,0.25,1) both`,
@@ -267,7 +267,7 @@ export default async function Home() {
               display: "grid", placeItems: "center", textAlign: "center",
               fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 14, lineHeight: 1.25,
               transform: "rotate(12deg)",
-              boxShadow: "0 10px 30px -5px rgba(232,93,79,0.6), 0 0 40px -10px rgba(232,93,79,0.5)",
+              boxShadow: "0 10px 30px -5px rgba(var(--rgb-cinnabar),0.6), 0 0 40px -10px rgba(var(--rgb-cinnabar),0.5)",
               zIndex: 6, letterSpacing: "0.05em",
             }}
           >
@@ -332,7 +332,7 @@ export default async function Home() {
             <Link key={a.id} href={`/anime/${a.id}`} className="group relative">
               <div
                 className="relative overflow-hidden"
-                style={{ aspectRatio: "2/3", borderRadius: 2, boxShadow: "0 10px 30px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(242,235,217,0.06)" }}
+                style={{ aspectRatio: "2/3", borderRadius: 2, boxShadow: "0 10px 30px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(var(--rgb-ink),0.06)" }}
               >
                 {a.poster_url ? (
                   <Image
@@ -471,7 +471,7 @@ export default async function Home() {
         <div className="relative z-[2] max-w-[780px] mx-auto">
           <div
             className="inline-flex gap-2.5 items-center mb-8"
-            style={{ padding: "8px 16px", background: "var(--cinnabar)", color: "#fff", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", boxShadow: "0 0 30px rgba(232,93,79,0.35)" }}
+            style={{ padding: "8px 16px", background: "var(--cinnabar)", color: "#fff", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", boxShadow: "0 0 30px rgba(var(--rgb-cinnabar),0.35)" }}
           >
             ● 3 главы бесплатно · без карты
           </div>

@@ -58,7 +58,7 @@ export default function AnimeDetailsClient({ anime, lastChapter }: AnimeDetailsC
             className="relative aspect-[2/3] w-full overflow-hidden"
             style={{
               borderRadius: 2,
-              boxShadow: "0 30px 60px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(242,235,217,0.08)",
+              boxShadow: "0 30px 60px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(var(--rgb-ink),0.08)",
             }}
           >
             {anime.poster_url && (

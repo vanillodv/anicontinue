@@ -43,8 +43,8 @@ export default function CookieBanner() {
           <div
             className="shrink-0 w-11 h-11 flex items-center justify-center"
             style={{
-              background: "rgba(232,93,79,0.12)",
-              border: "1px solid rgba(232,93,79,0.4)",
+              background: "rgba(var(--rgb-cinnabar),0.12)",
+              border: "1px solid rgba(var(--rgb-cinnabar),0.4)",
               color: "var(--cinnabar)",
               fontFamily: "var(--font-jp)",
               fontWeight: 900,

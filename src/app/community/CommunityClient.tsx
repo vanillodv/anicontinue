@@ -29,13 +29,13 @@ const SORT_OPTIONS: { key: SortKey; label: string; icon: React.ReactNode }[] = [
 function SkeletonCard() {
   return (
     <div className="flex flex-col gap-3 p-6 animate-pulse" style={{ background: "var(--paper-2)", border: "1px solid var(--line)" }}>
-      <div className="h-4 w-24" style={{ background: "rgba(242,235,217,0.08)" }} />
-      <div className="h-6 w-3/4" style={{ background: "rgba(242,235,217,0.08)" }} />
-      <div className="h-4 w-full" style={{ background: "rgba(242,235,217,0.05)" }} />
-      <div className="h-4 w-2/3" style={{ background: "rgba(242,235,217,0.05)" }} />
+      <div className="h-4 w-24" style={{ background: "rgba(var(--rgb-ink),0.08)" }} />
+      <div className="h-6 w-3/4" style={{ background: "rgba(var(--rgb-ink),0.08)" }} />
+      <div className="h-4 w-full" style={{ background: "rgba(var(--rgb-ink),0.05)" }} />
+      <div className="h-4 w-2/3" style={{ background: "rgba(var(--rgb-ink),0.05)" }} />
       <div className="mt-auto pt-3 flex justify-between">
-        <div className="h-3 w-20" style={{ background: "rgba(242,235,217,0.05)" }} />
-        <div className="h-3 w-16" style={{ background: "rgba(242,235,217,0.05)" }} />
+        <div className="h-3 w-20" style={{ background: "rgba(var(--rgb-ink),0.05)" }} />
+        <div className="h-3 w-16" style={{ background: "rgba(var(--rgb-ink),0.05)" }} />
       </div>
     </div>
   );
@@ -155,7 +155,7 @@ export default function CommunityPage() {
         <div className="py-28 flex flex-col items-center text-center gap-5">
           <div
             className="w-16 h-16 flex items-center justify-center"
-            style={{ background: "rgba(232,93,79,0.1)", border: "1px solid rgba(232,93,79,0.35)", borderRadius: 2, color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 30 }}
+            style={{ background: "rgba(var(--rgb-cinnabar),0.1)", border: "1px solid rgba(var(--rgb-cinnabar),0.35)", borderRadius: 2, color: "var(--cinnabar)", fontFamily: "var(--font-jp)", fontWeight: 900, fontSize: 30 }}
           >
             続
           </div>
