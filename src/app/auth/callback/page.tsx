@@ -2,11 +2,15 @@
 
 // Клиентский callback — exchangeCodeForSession выполняется в браузере,
 // где code_verifier доступен (хранится браузерным Supabase-клиентом).
-// Серверный Route Handler не мог его найти, потому что verifier не передавался в cookie.
+//
+// ВАЖНО: createBrowserClient по умолчанию включает detectSessionInUrl: true,
+// что вызывает автоматический обмен кода. Мы делаем обмен вручную, поэтому
+// создаём клиент с detectSessionInUrl: false, иначе код используется дважды —
+// первый раз автоматически (успешно), второй раз вручную (ошибка "code already used").
 
 import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 
 function CallbackHandler() {
   const router = useRouter();
@@ -26,9 +30,14 @@ function CallbackHandler() {
 
     const handleCallback = async () => {
       try {
-        const supabase = createClient();
+        // detectSessionInUrl: false — отключаем автоматический обмен кода,
+        // чтобы не конкурировать с нашим ручным вызовом exchangeCodeForSession.
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          { auth: { detectSessionInUrl: false } }
+        );
 
-        // Браузерный клиент знает code_verifier — обмениваем код на сессию.
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error) {
