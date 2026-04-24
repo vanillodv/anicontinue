@@ -316,6 +316,7 @@ export async function POST(req: Request) {
                 customCharacters: allCustomChars,
               },
               is_public: params.isPublic,
+              is_alternative_branch: params.sceneType === 'alternative',
             })
             .select('id')
             .single();

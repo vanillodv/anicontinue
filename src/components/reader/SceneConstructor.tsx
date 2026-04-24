@@ -424,6 +424,23 @@ export default function SceneConstructor({
                       );
                     })}
                   </div>
+
+                  {formData.sceneType === "alternative" && (
+                    <div
+                      className="mt-3 p-3"
+                      style={{
+                        background: "rgba(var(--rgb-cinnabar),0.06)",
+                        border: "1px solid rgba(var(--rgb-cinnabar),0.30)",
+                        borderLeft: "3px solid var(--cinnabar)",
+                        borderRadius: 2,
+                      }}
+                    >
+                      <p style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)", opacity: 0.8 }}>
+                        <strong>Альтернативная ветка</strong> — эта глава создаст развилку от текущего сюжета.
+                        Предыдущий контекст будет учтён, но события развернутся в <em>другом</em> направлении.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Text fields */}

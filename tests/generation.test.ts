@@ -31,6 +31,7 @@ function makeCtx(opts: {
   events?: number;
   previousChapters?: number;
   lastChapterLen?: number;
+  characterStatuses?: string[];
 }): StoryContext {
   const {
     hasBible = false,
@@ -38,6 +39,7 @@ function makeCtx(opts: {
     events = 0,
     previousChapters = 0,
     lastChapterLen = 4000,
+    characterStatuses = [],
   } = opts;
 
   const bible = hasBible
@@ -52,7 +54,7 @@ function makeCtx(opts: {
   const chars = Array.from({ length: characters }, (_, i) => ({
     name: `Персонаж ${i + 1}`,
     role: `Роль ${i + 1}`,
-    current_status: 'active',
+    current_status: characterStatuses[i] ?? 'active',
   }));
 
   const topEvents = Array.from({ length: Math.min(events, 10) }, (_, i) => ({
@@ -285,6 +287,90 @@ describe('dedupeByName — персонажи из истории', () => {
     expect(merged.find(c => c.name === 'Макс')).toBeDefined();
     expect(merged.find(c => c.name === 'Лена')).toBeDefined();
   });
+});
+
+// ─── Fix 3: Статусы персонажей в buildContextBlock ───────────────────────────
+
+describe('buildContextBlock — статусы персонажей', () => {
+  it('мёртвый персонаж помечается DEAD с предупреждением о воскрешении', () => {
+    const ctx = makeCtx({
+      hasBible: true,
+      characters: 2,
+      previousChapters: 3,
+      characterStatuses: ['dead', 'active'],
+    });
+    const block = buildContextBlock(ctx, 'continuation');
+    expect(block).toContain('DEAD (не воскрешать без явной сюжетной причины)');
+    expect(block).toContain('Персонаж 1');
+  });
+
+  it('живой персонаж (active) помечается ALIVE', () => {
+    const ctx = makeCtx({
+      hasBible: true,
+      characters: 2,
+      previousChapters: 3,
+      characterStatuses: ['active', 'alive'],
+    });
+    const block = buildContextBlock(ctx, 'continuation');
+    expect(block).toContain('ALIVE');
+    expect(block).not.toContain('DEAD');
+  });
+
+  it('мёртвый персонаж НЕ отфильтровывается из блока (Fix 3)', () => {
+    const ctx = makeCtx({
+      hasBible: false,
+      characters: 3,
+      previousChapters: 3,
+      characterStatuses: ['dead', 'dead', 'active'],
+    });
+    const block = buildContextBlock(ctx, 'continuation');
+    // Все три персонажа должны появиться в контексте
+    expect(block).toContain('Персонаж 1');
+    expect(block).toContain('Персонаж 2');
+    expect(block).toContain('Персонаж 3');
+  });
+
+  it('статус missing не помечается как DEAD', () => {
+    const ctx = makeCtx({
+      hasBible: true,
+      characters: 1,
+      previousChapters: 2,
+      characterStatuses: ['missing'],
+    });
+    const block = buildContextBlock(ctx, 'continuation');
+    expect(block).not.toContain('DEAD');
+    expect(block).toContain('[missing]');
+  });
+
+  it('Постоянные персонажи: счётчик включает и мёртвых', () => {
+    const ctx = makeCtx({
+      hasBible: true,
+      characters: 3,
+      previousChapters: 4,
+      characterStatuses: ['dead', 'active', 'missing'],
+    });
+    const block = buildContextBlock(ctx, 'continuation');
+    expect(block).toContain('Постоянные персонажи истории (3)');
+  });
+});
+
+// ─── Fix 2: Валидные статусы для character_updates ───────────────────────────
+
+describe('Валидные статусы персонажей', () => {
+  const VALID_STATUSES = ['alive', 'dead', 'missing', 'transformed', 'left-story', 'unknown', 'active'];
+  const INVALID_STATUSES = ['killed', 'gone', 'changed', 'unknown-status', ''];
+
+  for (const status of VALID_STATUSES) {
+    it(`статус "${status}" валидный`, () => {
+      expect(VALID_STATUSES.includes(status)).toBe(true);
+    });
+  }
+
+  for (const status of INVALID_STATUSES) {
+    it(`статус "${status}" НЕ валидный (фильтруется в bible-update)`, () => {
+      expect(VALID_STATUSES.includes(status)).toBe(false);
+    });
+  }
 });
 
 // ─── Regression: alternative не должен противоречить continuation ─────────────

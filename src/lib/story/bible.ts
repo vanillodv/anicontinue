@@ -69,11 +69,11 @@ export async function loadStoryContext(
       .eq('anime_id', animeId)
       .maybeSingle(),
 
+    // Fix 3: загружаем ВСЕХ персонажей (включая мёртвых), чтобы Claude знал кого не воскрешать
     db.from('story_characters')
       .select('name, role, current_status')
       .eq('user_id', userId)
       .eq('anime_id', animeId)
-      .eq('current_status', 'active')
       .order('created_at', { ascending: true }),
 
     db.from('story_events')
@@ -147,10 +147,25 @@ export function buildContextBlock(ctx: StoryContext, sceneType: string): string 
   }
 
   if (ctx.characters.length > 0) {
-    const lines = ctx.characters.map(c =>
-      `- ${c.name}${c.role ? ` (${c.role})` : ''}${c.current_status !== 'active' ? ` [${c.current_status}]` : ''}`
-    );
-    parts.push(`### Постоянные персонажи истории (${ctx.characters.length})\n${lines.join('\n')}`);
+    // Fix 3: показываем ВСЕХ персонажей с их статусами; мёртвых — с явным запретом воскрешения
+    const DEAD_STATUSES = new Set(['dead', 'death']);
+    const activeChars = ctx.characters.filter(c => !DEAD_STATUSES.has(c.current_status));
+    const deadChars = ctx.characters.filter(c => DEAD_STATUSES.has(c.current_status));
+
+    const lines: string[] = [];
+    for (const c of activeChars) {
+      const statusTag = (c.current_status && c.current_status !== 'active' && c.current_status !== 'alive')
+        ? ` [${c.current_status}]`
+        : '';
+      lines.push(`- ${c.name}${c.role ? ` (${c.role})` : ''}${statusTag} — ALIVE`);
+    }
+    for (const c of deadChars) {
+      lines.push(`- ${c.name}${c.role ? ` (${c.role})` : ''} — DEAD (не воскрешать без явной сюжетной причины)`);
+    }
+
+    if (lines.length > 0) {
+      parts.push(`### Постоянные персонажи истории (${ctx.characters.length})\n${lines.join('\n')}`);
+    }
   }
 
   if (ctx.topEvents.length > 0) {
@@ -198,51 +213,74 @@ export async function updateStoryBibleAsync(
   try {
     const db = svc();
 
-    // Получаем текущий bible
-    const { data: existing } = await db
-      .from('story_bibles')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('anime_id', animeId)
-      .maybeSingle();
+    // Получаем текущий bible и всех существующих персонажей
+    const [{ data: existing }, { data: existingChars }] = await Promise.all([
+      db.from('story_bibles')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('anime_id', animeId)
+        .maybeSingle(),
+      db.from('story_characters')
+        .select('name, current_status')
+        .eq('user_id', userId)
+        .eq('anime_id', animeId),
+    ]);
 
     const totalChapters = (existing?.total_chapters ?? 0) + 1;
 
-    // Краткий Claude-вызов для обновления bible (не стрим, обычный request)
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY || '',
       baseURL: process.env.ANTHROPIC_BASE_URL || undefined,
     });
 
-    const systemMsg = `Ты — хранитель сводки фанфика. Обновляй данные ТОЛЬКО на основе новой главы. Отвечай СТРОГО в JSON без markdown-оберток.`;
+    const systemMsg = `Ты — редактор длинного фанфика. Обновляй данные ТОЛЬКО на основе предоставленных глав. Отвечай СТРОГО в JSON без markdown-оберток.`;
 
-    const currentBible = existing
-      ? JSON.stringify({
-          summary: existing.summary ?? '',
-          plot_arc: existing.plot_arc ?? '',
-          world_state: existing.world_state ?? '',
-        })
-      : JSON.stringify({ summary: '', plot_arc: '', world_state: '' });
+    // Fix 2: передаём полный bible + полный контент главы (до 8000 символов)
+    const existingSummary = existing?.summary ?? '';
+    const existingPlotArc = existing?.plot_arc ?? '';
+    const existingWorldState = existing?.world_state ?? '';
+    const fullContent = chapterContent.slice(0, 8000);
 
-    const userMsg = `Текущая сводка истории:
-${currentBible}
+    // Fix 3: список существующих персонажей для детекции изменений статуса
+    const existingCharsJson = existingChars && existingChars.length > 0
+      ? JSON.stringify(existingChars.map(c => ({ name: c.name, current_status: c.current_status })))
+      : '[]';
 
-Новая глава (${totalChapters}): "${chapterTitle}"
+    const userMsg = `Ты редактор фанфика. Вот текущее состояние истории и новая глава.
+
+ТЕКУЩИЙ SUMMARY (события всех предыдущих глав):
+${existingSummary || '(первая глава — summary пустой)'}
+
+ТЕКУЩАЯ СЮЖЕТНАЯ АРКА:
+${existingPlotArc || '(нет)'}
+
+ТЕКУЩЕЕ СОСТОЯНИЕ МИРА:
+${existingWorldState || '(нет)'}
+
+СУЩЕСТВУЮЩИЕ ПЕРСОНАЖИ И ИХ СТАТУСЫ:
+${existingCharsJson}
+
+НОВАЯ ГЛАВА (глава ${totalChapters}): "${chapterTitle}"
 Краткое содержание: ${chapterSummary}
-Начало текста: ${chapterContent.slice(0, 800)}
+Полный текст:
+${fullContent}
 
-Верни JSON:
+Верни СТРОГО JSON (без markdown):
 {
-  "summary": "<обновлённая сводка всей истории, 200-600 слов>",
-  "plot_arc": "<главная нерешённая арка после этой главы, 1-3 предложения>",
-  "world_state": "<состояние мира после этой главы, 1-3 предложения>",
+  "summary": "НАКОПИТЕЛЬНЫЙ summary всей истории — сохраняй события всех предыдущих глав и добавляй события этой. НЕ заменяй старый summary, а дополняй его. 500-1500 слов на русском.",
+  "plot_arc": "главная нерешённая сюжетная арка после этой главы, 2-4 предложения",
+  "world_state": "текущее состояние мира после этой главы, 2-5 предложений",
   "events": [{"description": "...", "importance": 1-10, "event_type": "plot-point|death|meeting|conflict|resolution|revelation|other"}],
-  "character_updates": [{"name": "...", "current_status": "active|dead|missing|changed"}]
-}`;
+  "character_updates": [
+    {"name": "имя персонажа из списка выше", "new_status": "alive|dead|missing|transformed|left-story|unknown", "reason": "краткое обоснование из текста главы"}
+  ]
+}
+
+ВАЖНО для character_updates: включай ТОЛЬКО персонажей из списка выше с ЯВНЫМИ изменениями статуса в тексте главы. Не изменяй статус без явных доказательств в тексте.`;
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1200,
+      max_tokens: 2000,
       temperature: 0.3,
       system: systemMsg,
       messages: [{ role: 'user', content: userMsg }],
@@ -251,7 +289,6 @@ ${currentBible}
     const raw = response.content[0].type === 'text' ? response.content[0].text : '';
     let parsed: any = {};
     try {
-      // Вырезаем JSON если он обёрнут в markdown
       const match = raw.match(/\{[\s\S]*\}/);
       parsed = match ? JSON.parse(match[0]) : {};
     } catch {
@@ -288,26 +325,54 @@ ${currentBible}
       }
     }
 
-    // Upsert персонажей из customCharacters текущей главы
+    // Fix 1: Upsert персонажей из customCharacters с правильным first_chapter_id
+    // first_chapter_id ставим ТОЛЬКО при первом появлении (через INSERT ... ON CONFLICT DO UPDATE без перезаписи)
     for (const char of customCharacters) {
       if (!char.name) continue;
-      await db.from('story_characters').upsert({
-        user_id: userId,
-        anime_id: animeId,
-        name: char.name,
-        role: char.role || null,
-        current_status: 'active',
-        last_chapter_id: chapterId,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,anime_id,name' });
+      const { data: existing_char } = await db
+        .from('story_characters')
+        .select('id, first_chapter_id')
+        .eq('user_id', userId)
+        .eq('anime_id', animeId)
+        .ilike('name', char.name)
+        .maybeSingle();
+
+      if (existing_char) {
+        // Обновляем только last_chapter_id и description (если новое не пустое)
+        const updateData: Record<string, unknown> = {
+          last_chapter_id: chapterId,
+          updated_at: new Date().toISOString(),
+        };
+        if (char.role) updateData.role = char.role;
+        await db.from('story_characters')
+          .update(updateData)
+          .eq('id', existing_char.id);
+      } else {
+        // Первое появление — ставим first_chapter_id
+        await db.from('story_characters').insert({
+          user_id: userId,
+          anime_id: animeId,
+          name: char.name,
+          role: char.role || null,
+          current_status: 'alive',
+          first_chapter_id: chapterId,
+          last_chapter_id: chapterId,
+        });
+      }
     }
 
-    // Обновляем статусы из bible response
+    // Fix 3: Обновляем статусы из bible response (только с явными доказательствами)
     if (Array.isArray(parsed.character_updates)) {
       for (const upd of parsed.character_updates) {
-        if (!upd?.name) continue;
+        if (!upd?.name || !upd?.new_status) continue;
+        const validStatuses = ['alive', 'dead', 'missing', 'transformed', 'left-story', 'unknown', 'active'];
+        if (!validStatuses.includes(upd.new_status)) continue;
         await db.from('story_characters')
-          .update({ current_status: upd.current_status || 'active', updated_at: new Date().toISOString() })
+          .update({
+            current_status: upd.new_status,
+            last_chapter_id: chapterId,
+            updated_at: new Date().toISOString(),
+          })
           .eq('user_id', userId)
           .eq('anime_id', animeId)
           .ilike('name', upd.name);
@@ -397,7 +462,7 @@ export async function rebuildStoryBible(
           anime_id: animeId,
           name: c.name,
           role: c.role || null,
-          current_status: 'active',
+          current_status: 'alive',
         }))
       );
     }
