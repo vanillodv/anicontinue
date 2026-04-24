@@ -76,7 +76,7 @@ export default function SceneConstructor({
 
   const [formData, setFormData] = useState({
     mood: "Экшн" as Mood,
-    sceneType: "continuation" as "continuation" | "alternative",
+    sceneType: "continuation" as "continuation" | "alternative" | "own-ending",
     endingContext: "",
     startingPoint: "",
     continuePrevious: initialContinuePrevious,
@@ -397,16 +397,17 @@ export default function SceneConstructor({
                   <label style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ash)" }}>
                     Тип сцены · 場面
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3">
                     {[
-                      { key: "continuation", Icon: BookOpen, title: "Продолжение", desc: "Логическое развитие финала" },
-                      { key: "alternative",  Icon: Wand2,    title: "Альт. концовка", desc: "Всё могло быть иначе…" },
+                      { key: "continuation", Icon: BookOpen, title: "Продолжение", desc: "Продолжай мою историю" },
+                      { key: "alternative",  Icon: Wand2,    title: "Альт. ветка",  desc: "События пошли иначе…" },
+                      { key: "own-ending",   Icon: ChevronRight, title: "Мой финал", desc: "Завершу историю сам" },
                     ].map(({ key, Icon, title, desc }) => {
                       const active = formData.sceneType === key;
                       return (
                         <button
                           key={key}
-                          onClick={() => setFormData({ ...formData, sceneType: key as "continuation" | "alternative" })}
+                          onClick={() => setFormData({ ...formData, sceneType: key as "continuation" | "alternative" | "own-ending" })}
                           className="p-4 text-left flex items-center gap-3 transition-all"
                           style={{
                             background: active ? "rgba(var(--rgb-cinnabar),0.08)" : "transparent",
