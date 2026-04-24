@@ -1,5 +1,6 @@
 import { Anime } from "@/types";
 import { CustomCharacter } from "@/lib/validate";
+import { StoryContext, buildContextBlock, getTypeNote } from "@/lib/story/bible";
 
 export function getMasterSystemPrompt(
   anime: Anime,
@@ -13,43 +14,27 @@ export function getMasterSystemPrompt(
     ? anime.characters.join(", ")
     : (anime.characters || "");
 
-  // Если у аниме есть конец — используем его, иначе описываем мир
   const worldContext = userEndingContext || anime.ending_context || "";
   const hasEnding = worldContext.trim().length > 0;
 
   const endingBlock = hasEnding
-    ? `ФИНАЛ ОРИГИНАЛА / ТОЧКА ОТПРАВЛЕНИЯ:
-${worldContext}
-Именно отсюда начинается твоя глава.`
-    : `МИРОУСТРОЙСТВО:
-Используй описание выше как основу. Действие происходит В МИРЕ ЭТОГО АНИМЕ, среди его персонажей и событий. Не придумывай другой сеттинг.`;
+    ? `ФИНАЛ ОРИГИНАЛА / ТОЧКА ОТПРАВЛЕНИЯ:\n${worldContext}\nИменно отсюда начинается твоя глава.`
+    : `МИРОУСТРОЙСТВО:\nИспользуй описание выше как основу. Действие происходит В МИРЕ ЭТОГО АНИМЕ, среди его персонажей и событий. Не придумывай другой сеттинг.`;
 
   const startingBlock = userStartingPoint
     ? `НАЧАЛО ГЛАВЫ: "${userStartingPoint}" — начни именно с этого момента.`
     : "";
 
   const previousBlock = previousContext
-    ? `ТВОИ ПРЕДЫДУЩИЕ ГЛАВЫ (сохраняй преемственность):
-${previousContext}
-Персонажи помнят всё, что произошло. Продолжай без противоречий.`
+    ? `ТВОИ ПРЕДЫДУЩИЕ ГЛАВЫ (сохраняй преемственность):\n${previousContext}\nПерсонажи помнят всё, что произошло. Продолжай без противоречий.`
     : "";
 
-  // Блок пользовательских персонажей
   const customBlock = customCharacters && customCharacters.length > 0
-    ? `ДОПОЛНИТЕЛЬНЫЕ ПЕРСОНАЖИ (впиши их в историю органично):
-${customCharacters.map(c => `• ${c.name}${c.role ? ` — ${c.role}` : ""}`).join("\n")}
-Они взаимодействуют с оригинальными героями и влияют на сюжет.`
+    ? `ДОПОЛНИТЕЛЬНЫЕ ПЕРСОНАЖИ (впиши их в историю органично):\n${customCharacters.map(c => `• ${c.name}${c.role ? ` — ${c.role}` : ""}`).join("\n")}\nОни взаимодействуют с оригинальными героями и влияют на сюжет.`
     : "";
 
-  // Курированный prompt_template (если задан в БД) — главный козырь против generic-ChatGPT:
-  // содержит ключевых героев с характером, тон канона, запреты, специфику мира.
-  // Заполнено для топ-10 тайтлов в миграции 020.
   const curatedBlock = (anime as any).prompt_template
-    ? `═══════════════════════════════
-КУРИРОВАННЫЕ ЗНАНИЯ О ТАЙТЛЕ
-═══════════════════════════════
-${(anime as any).prompt_template}
-`
+    ? `═══════════════════════════════\nКУРИРОВАННЫЕ ЗНАНИЯ О ТАЙТЛЕ\n═══════════════════════════════\n${(anime as any).prompt_template}\n`
     : "";
 
   return `Ты — профессиональный автор фанфиков, специализирующийся на аниме. Пишешь продолжение к "${anime.title_ru || anime.title_en}".
@@ -108,21 +93,24 @@ export function buildPrompt(
     continuePrevious?: boolean;
     customCharacters?: CustomCharacter[];
   },
-  previousChapters?: { title: string | null; summary?: string | null }[],
+  storyCtx?: StoryContext | null,
 ) {
-  const previousContext =
-    previousChapters && previousChapters.length > 0
-      ? previousChapters
-          .map((c) => `• "${c.title}": ${c.summary || "нет сводки"}`)
-          .join("\n")
-      : "";
+  // Story Bible + предыдущие главы — многослойный контекст для любого N
+  const contextBlock = storyCtx ? buildContextBlock(storyCtx, params.sceneType ?? '') : '';
+
+  // Для совместимости с getMasterSystemPrompt: передаём текст последней главы
+  // через previousContext только если нет полноценного storyCtx
+  const legacyPrevContext = '';
+
+  const allCustomChars = params.customCharacters ?? [];
 
   const system = getMasterSystemPrompt(
     anime,
     params.endingContext,
     params.startingPoint,
-    previousContext,
-    params.customCharacters,
+    // Контекст предыдущих глав теперь приходит через storyCtx → contextBlock
+    contextBlock || legacyPrevContext,
+    allCustomChars,
   );
 
   const moodMap: Record<string, string> = {
@@ -134,16 +122,10 @@ export function buildPrompt(
 
   const mood = params.mood ? (moodMap[params.mood] || params.mood) : "продолжение в тоне оригинала";
 
-  const typeNote =
-    params.sceneType === "alternative"
-      ? "Это АЛЬТЕРНАТИВНАЯ концовка — события пошли иначе, чем в каноне. Объясни почему и как."
-      : "Это ПРЯМОЕ ПРОДОЛЖЕНИЕ канона — события вытекают из оригинала логически.";
+  // Fix 5: typeNote без противоречий — чёткая инструкция для каждого sceneType
+  const typeNote = getTypeNote(params.sceneType);
 
-  const continuityNote = params.continuePrevious
-    ? "Строго продолжай мои предыдущие главы — персонажи помнят всё что было."
-    : "Начинай с момента окончания оригинала (или мироустройства, если конец не задан).";
-
-  const user = `Напиши главу. Настроение: ${mood}. ${typeNote} ${continuityNote}`;
+  const user = `Напиши главу. Настроение: ${mood}. ${typeNote}`;
 
   return { system, user };
 }

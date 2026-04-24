@@ -38,7 +38,11 @@ export interface Profile {
 export interface SceneParams {
   mood?: string;
   focusCharacter?: string;
-  sceneType?: 'continuation' | 'alternative';
+  sceneType?: 'continuation' | 'alternative' | 'own-ending';
+  customCharacters?: Array<{ name: string; role: string }>;
+  startingPoint?: string;
+  endingContext?: string;
+  isPublic?: boolean;
 }
 
 export interface Chapter {

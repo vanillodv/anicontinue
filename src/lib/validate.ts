@@ -5,11 +5,10 @@ const customCharacterSchema = z.object({
   role: z.string().max(200),
 });
 
-// Санитизация для защиты от XSS и prompt-injection
 export const generateSchema = z.object({
   animeId: z.number().min(1),
   mood: z.enum(['Экшн', 'Драма', 'Романтика', 'Юмор']).optional(),
-  sceneType: z.enum(['continuation', 'alternative']).optional(),
+  sceneType: z.enum(['continuation', 'alternative', 'own-ending']).optional(),
   endingContext: z.string().max(400).optional(),
   startingPoint: z.string().max(400).optional(),
   continuePrevious: z.boolean().optional(),
