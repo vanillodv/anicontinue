@@ -528,7 +528,7 @@ export default async function Home() {
           main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
           main section { padding: 48px 16px !important; }
           .ac-sec-num { font-size: 42px !important; }
-          .ac-sec-title h2 { font-size: clamp(28px, 7vw, 40px) !important; }
+          .ac-sec-title :is(h1, h2) { font-size: clamp(28px, 7vw, 40px) !important; }
           /* «Свежие главы» светлый остров */
           main section:nth-of-type(4) { margin: 0 -16px !important; padding: 48px 16px !important; }
           main section:nth-of-type(4) .grid[style*="auto 1fr auto"] { grid-template-columns: 1fr !important; gap: 16px !important; }

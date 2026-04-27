@@ -101,7 +101,7 @@ export default function CommunityPage() {
         <div className="ac-sec-num hidden md:block">零参</div>
         <div className="ac-sec-title">
           <div className="kicker">03 · Community</div>
-          <h2>Сообщество <b>читателей</b></h2>
+          <h1>Сообщество <b>читателей</b></h1>
           <p className="mt-3 max-w-md" style={{ fontSize: 15, lineHeight: 1.55, color: "var(--ash)" }}>
             Истории, созданные другими фанатами. Читайте, ставьте лайки и возвращайтесь к любимым тайтлам.
           </p>

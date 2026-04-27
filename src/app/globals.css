@@ -221,7 +221,9 @@ body::before {
   color: var(--cinnabar);
   letter-spacing: -0.04em;
 }
-.ac-sec-title h2 {
+/* Заголовок секции: h1 — для смыслово главных страниц (/catalog, /community),
+   h2 — для подсекций главной и карточек. Стили одинаковые. */
+.ac-sec-title :is(h1, h2) {
   font-family: var(--font-serif);
   font-weight: 400;
   font-style: italic;
@@ -229,7 +231,7 @@ body::before {
   line-height: 1;
   letter-spacing: -0.02em;
 }
-.ac-sec-title h2 b { font-style: normal; font-weight: 900; }
+.ac-sec-title :is(h1, h2) b { font-style: normal; font-weight: 900; }
 .ac-sec-title .kicker {
   font-family: var(--font-mono);
   font-size: 11px;

@@ -54,7 +54,7 @@ export default function CatalogClient({ initialAnime }: { initialAnime: Anime[] 
         <div className="ac-sec-num hidden md:block">零弐</div>
         <div className="ac-sec-title">
           <div className="kicker">02 · Catalog</div>
-          <h2>Каталог <b>аниме</b></h2>
+          <h1>Каталог <b>аниме</b></h1>
           {!isSearching && (
             <p className="mt-3" style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}>
               {allAnime.length} тайтл{allAnime.length % 10 === 1 && allAnime.length % 100 !== 11 ? "" : allAnime.length % 10 >= 2 && allAnime.length % 10 <= 4 && (allAnime.length % 100 < 10 || allAnime.length % 100 >= 20) ? "а" : "ов"} · Страница {page} / {totalPages || 1}
