@@ -1,25 +1,49 @@
 import type { Metadata } from "next";
 import CommunityClient from "./CommunityClient";
+import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Сообщество",
-  description: "Читайте фанфик-главы от других поклонников аниме, ставьте лайки и продолжайте любимые истории.",
+  title: "Сообщество — фанфики по аниме от читателей",
+  description:
+    "Лента публичных фанфик-глав по любимым аниме. Романтика, экшн, альтернативные концовки от других читателей. Лайки, комментарии, сортировка по новизне и популярности.",
+  keywords: [
+    "сообщество аниме фанфиков",
+    "читать фанфик аниме",
+    "анимэ фанфики онлайн",
+    "AniContinue сообщество",
+  ],
   alternates: { canonical: "https://www.anicontinue.ru/community" },
   openGraph: {
-    title: "Сообщество — AniContinue",
-    description: "Читайте фанфик-главы от других поклонников аниме, ставьте лайки и продолжайте любимые истории.",
+    title: "Сообщество — фанфики по аниме от читателей",
+    description:
+      "Лента публичных фанфик-глав. Романтика, экшн, альтернативные концовки от других читателей.",
     url: "https://www.anicontinue.ru/community",
     type: "website",
     images: [{ url: "/og-image.svg", width: 1200, height: 630, alt: "Сообщество AniContinue" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Сообщество — AniContinue",
-    description: "Читайте фанфик-главы от других поклонников аниме, ставьте лайки и продолжайте любимые истории.",
+    title: "Сообщество — фанфики по аниме от читателей",
+    description:
+      "Лента публичных фанфик-глав. Романтика, экшн, альтернативные концовки.",
     images: ["/og-image.svg"],
   },
 };
 
+const breadcrumbsLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Главная", item: "https://www.anicontinue.ru" },
+    { "@type": "ListItem", position: 2, name: "Сообщество", item: "https://www.anicontinue.ru/community" },
+  ],
+};
+
 export default function CommunityPage() {
-  return <CommunityClient />;
+  return (
+    <>
+      <JsonLd data={breadcrumbsLd} />
+      <CommunityClient />
+    </>
+  );
 }

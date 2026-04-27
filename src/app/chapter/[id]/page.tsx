@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { serviceClient } from "@/lib/admin/guard";
 import { notFound } from "next/navigation";
 import ChapterReader from "./ChapterReader";
+import JsonLd from "@/components/seo/JsonLd";
 import { Chapter, Anime } from "@/types";
 import { proxyImage } from "@/lib/proxyImage";
 
@@ -69,14 +71,90 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
     notFound();
   }
 
+  // Имя автора берём service-клиентом — RLS на profiles иначе вернёт null
+  // для чужих юзеров, и в JSON-LD автор оказался бы без имени.
+  let authorName: string | null = null;
+  if ((chapter as any).user_id) {
+    const svc = serviceClient();
+    const { data: profile } = await svc
+      .from("profiles")
+      .select("username")
+      .eq("id", (chapter as any).user_id)
+      .single();
+    authorName = profile?.username ?? null;
+  }
+
   // Приведение типов для TS, так как select с join возвращает сложную структуру
   const typedChapter = chapter as any as Chapter;
   const typedAnime = (chapter as any).anime as Pick<Anime, 'id' | 'title_ru' | 'title_en' | 'poster_url'>;
 
+  const animeName = typedAnime?.title_ru || typedAnime?.title_en || "Аниме";
+  const chapterUrl = `https://www.anicontinue.ru/chapter/${id}`;
+
+  // JSON-LD: Article (наиболее подходящий тип для отдельной главы фанфика)
+  // + BreadcrumbList. Поле inLanguage — критично для русскоязычного индекса
+  // Яндекса.
+  const chapterLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: typedChapter.title || `Глава по «${animeName}»`,
+      description: ((typedChapter.content as string) || "")
+        .replace(/\s+/g, " ")
+        .slice(0, 250)
+        .trim() || `Фанфик-глава по «${animeName}».`,
+      url: chapterUrl,
+      datePublished: typedChapter.created_at,
+      dateModified: typedChapter.created_at,
+      inLanguage: "ru-RU",
+      isFamilyFriendly: true,
+      author: {
+        "@type": "Person",
+        name: authorName || "Аноним",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "AniContinue",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://www.anicontinue.ru/logo.svg",
+        },
+      },
+      image: typedAnime?.poster_url ? proxyImage(typedAnime.poster_url) : undefined,
+      isPartOf: typedAnime
+        ? {
+            "@type": "TVSeries",
+            name: animeName,
+            url: `https://www.anicontinue.ru/anime/${typedAnime.id}`,
+          }
+        : undefined,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Главная", item: "https://www.anicontinue.ru" },
+        { "@type": "ListItem", position: 2, name: "Каталог", item: "https://www.anicontinue.ru/catalog" },
+        ...(typedAnime
+          ? [{ "@type": "ListItem", position: 3, name: animeName, item: `https://www.anicontinue.ru/anime/${typedAnime.id}` }]
+          : []),
+        {
+          "@type": "ListItem",
+          position: typedAnime ? 4 : 3,
+          name: typedChapter.title || "Глава",
+          item: chapterUrl,
+        },
+      ],
+    },
+  ];
+
   return (
-    <ChapterReader
-      chapter={typedChapter}
-      anime={typedAnime}
-    />
+    <>
+      <JsonLd data={chapterLd} />
+      <ChapterReader
+        chapter={typedChapter}
+        anime={typedAnime}
+      />
+    </>
   );
 }

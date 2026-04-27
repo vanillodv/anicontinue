@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import AnimeDetailsClient from "./AnimeDetailsClient";
 import AnimeChaptersFeed from "./AnimeChaptersFeed";
+import RelatedAnime from "./RelatedAnime";
+import JsonLd from "@/components/seo/JsonLd";
 import { proxyImage } from "@/lib/proxyImage";
 
 export const revalidate = 3600;
@@ -70,14 +72,59 @@ export default async function AnimePage({ params }: AnimePageProps) {
     lastChapter = data;
   }
 
+  // JSON-LD для страницы аниме: TVSeries + BreadcrumbList.
+  // TVSeries — наиболее точный schema.org-тип для аниме (от ТВ-сериалов
+  // схема Google различает плохо, но описательные поля те же).
+  const animeUrl = `https://www.anicontinue.ru/anime/${id}`;
+  const animeLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "TVSeries",
+      name: anime.title_ru || anime.title_en,
+      alternateName: anime.title_en && anime.title_ru ? anime.title_en : undefined,
+      url: animeUrl,
+      description: anime.synopsis || undefined,
+      image: anime.poster_url ? proxyImage(anime.poster_url) : undefined,
+      genre: Array.isArray(anime.genres) ? anime.genres : undefined,
+      datePublished: anime.year ? `${anime.year}-01-01` : undefined,
+      productionCompany: anime.studio
+        ? { "@type": "Organization", name: anime.studio }
+        : undefined,
+      numberOfEpisodes: anime.episodes || undefined,
+      aggregateRating: anime.score
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: Number(anime.score).toFixed(2),
+            bestRating: "10",
+            ratingCount: 1,
+          }
+        : undefined,
+      inLanguage: "ja",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Главная", item: "https://www.anicontinue.ru" },
+        { "@type": "ListItem", position: 2, name: "Каталог", item: "https://www.anicontinue.ru/catalog" },
+        { "@type": "ListItem", position: 3, name: anime.title_ru || anime.title_en, item: animeUrl },
+      ],
+    },
+  ];
+
   return (
     <>
+      <JsonLd data={animeLd} />
       <AnimeDetailsClient
         anime={anime}
         lastChapter={lastChapter}
       />
       <div style={{ padding: "0 44px 120px", maxWidth: 1400, margin: "0 auto" }}>
         <AnimeChaptersFeed animeId={Number(id)} animeName={anime.title_ru || anime.title_en || ""} />
+        <RelatedAnime
+          currentAnimeId={Number(id)}
+          genres={Array.isArray(anime.genres) ? anime.genres : []}
+        />
       </div>
     </>
   );
