@@ -87,6 +87,17 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // /community — обновляется чаще, поэтому короткий s-maxage.
+      // Боты-краулеры за 5 мин получат свежий лист, юзер при ленте — без ожидания.
+      {
+        source: '/community',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=86400',
+          },
+        ],
+      },
     ];
   },
   images: {
