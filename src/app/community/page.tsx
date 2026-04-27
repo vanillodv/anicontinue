@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import CommunityClient from "./CommunityClient";
 import JsonLd from "@/components/seo/JsonLd";
+import Breadcrumbs from "@/components/layout/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Сообщество — фанфики по аниме от читателей",
@@ -43,6 +44,9 @@ export default function CommunityPage() {
   return (
     <>
       <JsonLd data={breadcrumbsLd} />
+      <div style={{ padding: "32px 44px 0", maxWidth: 1400, margin: "0 auto" }}>
+        <Breadcrumbs items={[{ label: "Сообщество" }]} />
+      </div>
       <CommunityClient />
     </>
   );

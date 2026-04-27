@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import CatalogClient from "./CatalogClient";
 import JsonLd from "@/components/seo/JsonLd";
+import Breadcrumbs from "@/components/layout/Breadcrumbs";
 import { Anime } from "@/types";
 
 export const metadata: Metadata = {
@@ -54,6 +55,9 @@ export default async function CatalogPage() {
   return (
     <>
       <JsonLd data={breadcrumbsLd} />
+      <div style={{ padding: "32px 44px 0", maxWidth: 1400, margin: "0 auto" }}>
+        <Breadcrumbs items={[{ label: "Каталог" }]} />
+      </div>
       <CatalogClient initialAnime={(data ?? []) as Anime[]} />
     </>
   );
