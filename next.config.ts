@@ -5,15 +5,18 @@ const SUPABASE_HOST = 'zafbjeslpkprdqaiynqs.supabase.co';
 
 const csp = [
   "default-src 'self'",
-  // Next.js использует inline-скрипты для hydration; 'unsafe-eval' нужен для dev-режима
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // Next.js использует inline-скрипты для hydration; 'unsafe-eval' нужен для dev-режима.
+  // mc.yandex.ru — Yandex.Metrica counter (активируется через NEXT_PUBLIC_YANDEX_METRICA_ID).
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru",
   // Inline-стили из JSX style={}, шрифты self-hosted через next/font
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  // Картинки: MAL CDN (постеры), Google аватары, Supabase Storage
-  `img-src 'self' data: blob: https://cdn.myanimelist.net https://myanimelist.net https://lh3.googleusercontent.com https://${SUPABASE_HOST}`,
-  // XHR/fetch: Supabase (REST + realtime)
-  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}`,
+  // Картинки: MAL CDN (постеры), Google аватары, Supabase Storage, Метрика-пиксель
+  `img-src 'self' data: blob: https://cdn.myanimelist.net https://myanimelist.net https://lh3.googleusercontent.com https://${SUPABASE_HOST} https://mc.yandex.ru`,
+  // XHR/fetch: Supabase (REST + realtime), Метрика (отправка событий)
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://mc.yandex.ru`,
+  // Frame: webvisor Метрики иногда вставляет фрейм
+  "frame-src 'self' https://mc.yandex.ru",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",

@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import CookieBanner from "@/components/layout/CookieBanner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import JsonLd from "@/components/seo/JsonLd";
+import YandexMetrica from "@/components/analytics/YandexMetrica";
 import { getSiteSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import MaintenancePage from "./maintenance/page";
@@ -102,6 +103,15 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  // Подтверждение владения сайтом для поисковых консолей.
+  // Значения берём из env, чтобы юзер мог вставить токен в YC без изменения кода.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.YANDEX_VERIFICATION,
+    other: process.env.MAILRU_VERIFICATION
+      ? { "mailru-domain": process.env.MAILRU_VERIFICATION }
+      : undefined,
+  },
 };
 
 export default async function RootLayout({
@@ -163,6 +173,7 @@ export default async function RootLayout({
     <html lang="ru" className={`${fontVars} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <JsonLd data={orgAndSiteLd} />
+        <YandexMetrica />
         <ThemeProvider>
           {settings.maintenance_mode && !isAdmin ? (
             <MaintenancePage />
