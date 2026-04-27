@@ -34,11 +34,55 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Канонический домен — www. apex (anicontinue.ru) должен приходить
+  // в Next через YC API Gateway/Cloud Function (см. docs/yc-apex-domain-attach.md);
+  // тогда этот редирект сработает и снимет дубль контента в SEO.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'anicontinue.ru' }],
+        destination: 'https://www.anicontinue.ru/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+      // CDN-кеш для каталога: содержимое меняется редко (раз в час
+      // при revalidate), а YC API Gateway по умолчанию ставит no-store.
+      // Явно объявляем public/s-maxage, чтобы edge-кеш брал на себя нагрузку.
+      {
+        source: '/catalog',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      // Главная и страница аниме — те же характеристики.
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/anime/:id',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
       },
     ];
   },
