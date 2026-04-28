@@ -13,8 +13,17 @@ interface AnimePageProps {
   params: Promise<{ id: string }>;
 }
 
+// Валидация id — anime.id это bigint в БД. Защищаемся от мусора в URL,
+// чтобы не делать заведомо пустой запрос и не получать «висячий» 404.
+function parseAnimeId(raw: string): number | null {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 && n < 2 ** 53 ? n : null;
+}
+
 export async function generateMetadata({ params }: AnimePageProps): Promise<Metadata> {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const id = parseAnimeId(rawId);
+  if (id === null) return { title: "Аниме не найдено" };
   const supabase = await createClient();
   const { data: anime } = await supabase
     .from("anime")
@@ -48,15 +57,21 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
 }
 
 export default async function AnimePage({ params }: AnimePageProps) {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const id = parseAnimeId(rawId);
+  if (id === null) notFound();
   const supabase = await createClient();
 
-  // Получаем аниме
-  const { data: anime } = await supabase.from('anime').select('*').eq('id', id).single();
+  // Anime + user → параллельно (user не зависит от anime).
+  const [animeRes, userRes] = await Promise.all([
+    supabase.from('anime').select('*').eq('id', id).single(),
+    supabase.auth.getUser(),
+  ]);
+
+  const { data: anime } = animeRes;
   if (!anime) notFound();
 
-  // Проверяем наличие глав пользователя
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = userRes.data.user;
   let lastChapter = null;
 
   if (user) {
@@ -68,7 +83,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
-    
+
     lastChapter = data;
   }
 
@@ -120,9 +135,9 @@ export default async function AnimePage({ params }: AnimePageProps) {
         lastChapter={lastChapter}
       />
       <div style={{ padding: "0 44px 120px", maxWidth: 1400, margin: "0 auto" }}>
-        <AnimeChaptersFeed animeId={Number(id)} animeName={anime.title_ru || anime.title_en || ""} />
+        <AnimeChaptersFeed animeId={id} animeName={anime.title_ru || anime.title_en || ""} />
         <RelatedAnime
-          currentAnimeId={Number(id)}
+          currentAnimeId={id}
           genres={Array.isArray(anime.genres) ? anime.genres : []}
         />
       </div>
