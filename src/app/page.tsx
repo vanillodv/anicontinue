@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { serviceClient } from "@/lib/admin/guard";
 import { proxyImage } from "@/lib/proxyImage";
 import ExamplePreview from "@/components/landing/ExamplePreview";
+import JsonLd from "@/components/seo/JsonLd";
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,22 @@ export default async function Home() {
 
   const heroPosters = (popularAnime ?? []).slice(0, 4);
 
+  // JSON-LD главной: ItemList с топом аниме — Google использует для
+  // карусели «популярные тайтлы» в SERP. URL карточек ведут на /anime/[id].
+  const homeLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Популярные аниме на AniContinue",
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    numberOfItems: (popularAnime ?? []).length,
+    itemListElement: (popularAnime ?? []).map((a, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `https://www.anicontinue.ru/anime/${a.id}`,
+      name: a.title_ru || a.title_en,
+    })),
+  };
+
   // Курация «Свежих глав» — берём 3 разные главы: не больше одной на автора
   // и не больше одной на аниме, чтобы не выглядело антидоказательством
   // (раньше вся витрина была от одного пользователя по одному тайтлу).
@@ -75,6 +92,7 @@ export default async function Home() {
 
   return (
     <div style={{ color: "var(--ink)" }}>
+      <JsonLd data={homeLd} />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section
@@ -528,7 +546,7 @@ export default async function Home() {
           main section:nth-of-type(3) .grid[style*="repeat(4"] { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
           main section { padding: 48px 16px !important; }
           .ac-sec-num { font-size: 42px !important; }
-          .ac-sec-title h2 { font-size: clamp(28px, 7vw, 40px) !important; }
+          .ac-sec-title :is(h1, h2) { font-size: clamp(28px, 7vw, 40px) !important; }
           /* «Свежие главы» светлый остров */
           main section:nth-of-type(4) { margin: 0 -16px !important; padding: 48px 16px !important; }
           main section:nth-of-type(4) .grid[style*="auto 1fr auto"] { grid-template-columns: 1fr !important; gap: 16px !important; }

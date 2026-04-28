@@ -5,6 +5,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CookieBanner from "@/components/layout/CookieBanner";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import JsonLd from "@/components/seo/JsonLd";
+import YandexMetrica from "@/components/analytics/YandexMetrica";
 import { getSiteSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import MaintenancePage from "./maintenance/page";
@@ -45,15 +47,36 @@ const notoJp = Noto_Serif_JP({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.anicontinue.ru"),
-  title: { default: "AniContinue — Продолжи своё любимое аниме с AI", template: "%s | AniContinue" },
-  description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
-  keywords: ["аниме", "фанфик", "AI", "продолжение аниме", "AniContinue"],
+  title: {
+    default: "AniContinue — Продолжи своё любимое аниме с AI",
+    template: "%s | AniContinue",
+  },
+  description:
+    "Допиши то, что канон не додал. AI продолжает любимое аниме за 30 секунд: романтические концовки, альтернативные арки, недосказанные истории. 3 главы бесплатно, без карты.",
+  keywords: [
+    "аниме",
+    "фанфик",
+    "продолжение аниме",
+    "AI фанфик",
+    "альтернативная концовка аниме",
+    "генерация фанфиков",
+    "AniContinue",
+    "anime fanfic",
+    "написать главу аниме",
+  ],
+  applicationName: "AniContinue",
+  authors: [{ name: "AniContinue" }],
+  alternates: {
+    canonical: "https://www.anicontinue.ru",
+  },
   openGraph: {
     type: "website",
     locale: "ru_RU",
     siteName: "AniContinue",
+    url: "https://www.anicontinue.ru",
     title: "AniContinue — Продолжи своё любимое аниме с AI",
-    description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
+    description:
+      "Допиши то, что канон не додал. AI продолжает любимое аниме за 30 секунд. 3 главы бесплатно, без карты.",
     images: [
       {
         url: "/og-image.svg",
@@ -66,8 +89,28 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "AniContinue — Продолжи своё любимое аниме с AI",
-    description: "Создавай новые главы и сюжетные повороты для популярных аниме с помощью искусственного интеллекта.",
+    description:
+      "Допиши то, что канон не додал. AI продолжает любимое аниме за 30 секунд.",
     images: ["/og-image.svg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  // Подтверждение владения сайтом для поисковых консолей.
+  // Значения берём из env, чтобы юзер мог вставить токен в YC без изменения кода.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.YANDEX_VERIFICATION,
+    other: process.env.MAILRU_VERIFICATION
+      ? { "mailru-domain": process.env.MAILRU_VERIFICATION }
+      : undefined,
   },
 };
 
@@ -97,9 +140,40 @@ export default async function RootLayout({
 
   const fontVars = `${manrope.variable} ${fraunces.variable} ${jetbrains.variable} ${notoJp.variable}`;
 
+  // Глобальный JSON-LD: Organization + WebSite + SearchAction.
+  // Эти три типа всегда уместны на каждой странице — поисковики используют
+  // их для шапки в выдаче и для sitelinks-search-box у Google.
+  const orgAndSiteLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "AniContinue",
+      url: "https://www.anicontinue.ru",
+      logo: "https://www.anicontinue.ru/logo.svg",
+      sameAs: ["https://boosty.to/anicontinue"],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "AniContinue",
+      url: "https://www.anicontinue.ru",
+      inLanguage: "ru-RU",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: "https://www.anicontinue.ru/catalog?q={search_term_string}",
+        },
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ];
+
   return (
     <html lang="ru" className={`${fontVars} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
+        <JsonLd data={orgAndSiteLd} />
+        <YandexMetrica />
         <ThemeProvider>
           {settings.maintenance_mode && !isAdmin ? (
             <MaintenancePage />

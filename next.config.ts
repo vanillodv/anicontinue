@@ -5,15 +5,18 @@ const SUPABASE_HOST = 'zafbjeslpkprdqaiynqs.supabase.co';
 
 const csp = [
   "default-src 'self'",
-  // Next.js использует inline-скрипты для hydration; 'unsafe-eval' нужен для dev-режима
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // Next.js использует inline-скрипты для hydration; 'unsafe-eval' нужен для dev-режима.
+  // mc.yandex.ru — Yandex.Metrica counter (активируется через NEXT_PUBLIC_YANDEX_METRICA_ID).
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru",
   // Inline-стили из JSX style={}, шрифты self-hosted через next/font
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  // Картинки: MAL CDN (постеры), Google аватары, Supabase Storage
-  `img-src 'self' data: blob: https://cdn.myanimelist.net https://myanimelist.net https://lh3.googleusercontent.com https://${SUPABASE_HOST}`,
-  // XHR/fetch: Supabase (REST + realtime)
-  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}`,
+  // Картинки: MAL CDN (постеры), Google аватары, Supabase Storage, Метрика-пиксель
+  `img-src 'self' data: blob: https://cdn.myanimelist.net https://myanimelist.net https://lh3.googleusercontent.com https://${SUPABASE_HOST} https://mc.yandex.ru`,
+  // XHR/fetch: Supabase (REST + realtime), Метрика (отправка событий)
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://mc.yandex.ru`,
+  // Frame: webvisor Метрики иногда вставляет фрейм
+  "frame-src 'self' https://mc.yandex.ru",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
@@ -34,11 +37,66 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Канонический домен — www. apex (anicontinue.ru) должен приходить
+  // в Next через YC API Gateway/Cloud Function (см. docs/yc-apex-domain-attach.md);
+  // тогда этот редирект сработает и снимет дубль контента в SEO.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'anicontinue.ru' }],
+        destination: 'https://www.anicontinue.ru/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+      // CDN-кеш для каталога: содержимое меняется редко (раз в час
+      // при revalidate), а YC API Gateway по умолчанию ставит no-store.
+      // Явно объявляем public/s-maxage, чтобы edge-кеш брал на себя нагрузку.
+      {
+        source: '/catalog',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      // Главная и страница аниме — те же характеристики.
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/anime/:id',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      // /community — обновляется чаще, поэтому короткий s-maxage.
+      // Боты-краулеры за 5 мин получат свежий лист, юзер при ленте — без ожидания.
+      {
+        source: '/community',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=86400',
+          },
+        ],
       },
     ];
   },
