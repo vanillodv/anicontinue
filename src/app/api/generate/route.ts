@@ -77,8 +77,15 @@ const WINDOW_SEC = 60;
 
 export async function POST(req: Request) {
   let consumedUserId: string | null = null;
+  // Корреляционный id для трассировки стадий в логах прода:
+  // grep -E "\[gen=ABC123\]" → весь жизненный цикл одного запроса.
+  const reqId = Math.random().toString(36).slice(2, 10);
+  const t0 = Date.now();
+  const log = (stage: string, extra?: Record<string, unknown>) =>
+    console.log(`[gen=${reqId}] step=${stage} dt=${Date.now() - t0}ms`, extra ?? '');
 
   try {
+    log('start');
     // Fix 8: auth ПЕРЕД Zod — анонимы получают 401, а не 400
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -90,22 +97,31 @@ export async function POST(req: Request) {
         .map((c) => c.trim().split('=')[0])
         .filter((n) => n.startsWith('sb-'));
       const diag = `authError=${authError?.message || 'null'} user=null sbCookies=[${sbCookies.join(',')}]`;
-      console.error('[generate] auth failed:', diag);
+      log('auth_failed', { diag });
       await logGenError(null, null, 'auth_error', diag.slice(0, 500));
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
+    log('auth_ok', { userId: user.id });
 
-    const body = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch (e) {
+      log('body_parse_failed', { err: (e as Error).message });
+      await logGenError(user.id, null, 'invalid_input', `json_parse: ${(e as Error).message}`);
+      return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 400 });
+    }
     const result = generateSchema.safeParse(body);
     if (!result.success) {
-      console.error('Validation failed:', result.error.format());
-      await logGenError(user.id, body?.animeId ?? null, 'invalid_input',
+      log('zod_failed', result.error.flatten().fieldErrors);
+      await logGenError(user.id, (body as { animeId?: number })?.animeId ?? null, 'invalid_input',
         JSON.stringify(result.error.flatten().fieldErrors).slice(0, 400));
       return NextResponse.json(
         { error: 'INVALID_INPUT', details: result.error.format() },
         { status: 400 }
       );
     }
+    log('zod_ok', { animeId: result.data.animeId, sceneType: result.data.sceneType });
 
     const params = {
       animeId: result.data.animeId,
@@ -137,19 +153,21 @@ export async function POST(req: Request) {
     ]);
 
     if (userOk === false || ipOk === false) {
+      log('rate_limited', { userOk, ipOk });
       await logGenError(user.id, params.animeId, 'rate_limited', `userOk=${userOk} ipOk=${ipOk}`);
       return NextResponse.json(
         { error: 'RATE_LIMITED', message: 'Слишком много запросов. Подождите минуту.' },
         { status: 429 }
       );
     }
+    log('rate_ok');
 
     const { data: canProceed, error: rpcError } = await svcClient.rpc('consume_chapter', {
       p_user_id: user.id,
     });
 
     if (rpcError) {
-      console.error('consume_chapter error:', rpcError);
+      log('consume_failed', { code: rpcError.code, message: rpcError.message });
       await logGenError(user.id, params.animeId, 'db_error',
         `consume_chapter: ${rpcError.message || rpcError.code || JSON.stringify(rpcError)}`);
       return NextResponse.json({ error: 'DB_ERROR' }, { status: 500 });
@@ -175,29 +193,36 @@ export async function POST(req: Request) {
     }
 
     consumedUserId = user.id;
+    log('consumed');
 
     // Fix 3: shouldLoadContext по sceneType, не по continuePrevious
     // continuation / alternative / own-ending — всегда загружаем историю пользователя
     const shouldLoadContext = ['continuation', 'alternative', 'own-ending']
       .includes(params.sceneType ?? '');
 
-    // Загружаем аниме и (при нужном типе) контекст параллельно
+    // Загружаем аниме и (при нужном типе) контекст параллельно.
+    // loadStoryContext не должен ронять весь запрос — таблицы story_*
+    // могут быть не созданы на старых окружениях. Проглатываем и идём дальше.
     const [animeResult, storyCtx] = await Promise.all([
       supabase.from('anime').select('*').eq('id', params.animeId).single(),
       shouldLoadContext
-        ? loadStoryContext(user.id, params.animeId, params.sceneType ?? '')
+        ? loadStoryContext(user.id, params.animeId, params.sceneType ?? '').catch((e) => {
+            log('story_ctx_failed', { msg: (e as Error)?.message });
+            return null;
+          })
         : Promise.resolve(null),
     ]);
 
     const { data: anime, error: animeError } = animeResult;
     if (animeError || !anime) {
-      console.error('Anime fetch error:', animeError);
+      log('anime_not_found', { animeId: params.animeId, err: animeError?.message });
       await logGenError(user.id, params.animeId, 'anime_not_found',
         animeError?.message || `id=${params.animeId}`);
       await refundChapter(user.id);
       consumedUserId = null;
       return NextResponse.json({ error: 'ANIME_NOT_FOUND' }, { status: 404 });
     }
+    log('anime_loaded', { contextLoaded: !!storyCtx });
 
     // Fix 1: svc() для чтения ai_prompts — обходит RLS-блокировку обычных пользователей
     const { data: activePrompt } = await svc()
@@ -207,7 +232,7 @@ export async function POST(req: Request) {
       .limit(1)
       .single();
 
-    console.log('[generate] prompt_used:', activePrompt?.version ?? 'fallback');
+    log('prompt_loaded', { version: activePrompt?.version ?? 'fallback' });
 
     const baseSystemPrompt = activePrompt?.system_prompt ||
       'Ты автор фанфика. Пиши ТОЛЬКО на русском. PG-13, без галлюцинаций канона.';
@@ -226,9 +251,12 @@ export async function POST(req: Request) {
     );
     const systemPrompt = `${finalSystemPrompt}\n\n${generatedSystem}`;
 
-    console.log('[generate] story_context_loaded:', shouldLoadContext,
-      '| chapters:', storyCtx?.bible?.total_chapters ?? 0,
-      '| recurring_chars:', recurringChars.length);
+    log('prompt_built', {
+      contextLoaded: shouldLoadContext,
+      totalChapters: storyCtx?.bible?.total_chapters ?? 0,
+      recurringChars: recurringChars.length,
+      promptLen: systemPrompt.length,
+    });
 
     const stream = await streamWithRetry(anthropic, {
       model: 'claude-haiku-4-5-20251001',
@@ -237,6 +265,7 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     });
+    log('stream_started');
 
     const userId = user.id;
     const encoder = new TextEncoder();
@@ -296,8 +325,30 @@ export async function POST(req: Request) {
           }
 
           const finalResponse = await stream.finalMessage();
-          const usage = finalResponse.usage;
+          // usage иногда отсутствует на оборванных стримах — защита от NaN.
+          const usage = finalResponse.usage ?? { input_tokens: 0, output_tokens: 0 };
           let chapterId: string | null = null;
+
+          log('stream_done', {
+            inputTokens: usage.input_tokens,
+            outputTokens: usage.output_tokens,
+            contentLen: content.length,
+            titleLen: title.length,
+            summaryLen: summary.length,
+          });
+
+          // Если контент совсем пустой — это ошибка генерации, а не успех.
+          // Возвращаем deniм + рефанд.
+          if (!content && !title) {
+            log('empty_response');
+            await logGenError(userId, params.animeId, 'ai_error', 'empty response from claude');
+            controller.enqueue(encoder.encode(
+              JSON.stringify({ type: 'ai_error', message: 'Модель вернула пустой ответ. Главу не списали.' }) + '\n'
+            ));
+            await refundChapter(userId);
+            controller.close();
+            return;
+          }
 
           const cleanTitle = (title || 'Без названия').replace(/^[\s#*]+/, '').trim() || 'Без названия';
           const cleanContent = (content || 'Текст отсутствует').replace(/^\s+/, '');
@@ -322,7 +373,9 @@ export async function POST(req: Request) {
             .single();
 
           if (chapterErr) {
-            console.error('Database Error (Insert Chapter):', JSON.stringify(chapterErr));
+            log('insert_failed', { code: chapterErr.code, message: chapterErr.message });
+            await logGenError(userId, params.animeId, 'db_error',
+              `chapters_insert: ${chapterErr.code || ''} ${chapterErr.message || ''}`.slice(0, 400));
             controller.enqueue(encoder.encode(
               JSON.stringify({ type: 'db_error', message: chapterErr.message, code: chapterErr.code }) + '\n'
             ));
@@ -330,22 +383,29 @@ export async function POST(req: Request) {
           } else {
             chapterId = chapter.id;
             chapterSaved = true;
+            log('chapter_saved', { chapterId });
           }
 
-          // Fix 2: ai_usage_logs через svc() — обходит отсутствующую INSERT-политику
-          await svc().from('ai_usage_logs').insert({
-            user_id: userId,
-            chapter_id: chapterId,
-            input_tokens: usage.input_tokens,
-            output_tokens: usage.output_tokens,
-            cost_usd: (usage.input_tokens * 0.003 + usage.output_tokens * 0.015) / 1000,
-            model: 'claude-haiku-4-5-20251001',
-          });
+          // Fix 2: ai_usage_logs через svc() — обходит отсутствующую INSERT-политику.
+          // Не роняем стрим, если usage_logs упадут — пользователь уже получил главу.
+          try {
+            await svc().from('ai_usage_logs').insert({
+              user_id: userId,
+              chapter_id: chapterId,
+              input_tokens: usage.input_tokens,
+              output_tokens: usage.output_tokens,
+              cost_usd: (usage.input_tokens * 0.003 + usage.output_tokens * 0.015) / 1000,
+              model: 'claude-haiku-4-5-20251001',
+            });
+          } catch (e) {
+            log('usage_log_failed', { msg: (e as Error)?.message });
+          }
 
           controller.enqueue(encoder.encode(
             JSON.stringify({ type: 'done', chapterId: chapterId || 'error' }) + '\n'
           ));
           controller.close();
+          log('done');
 
           // Фоновое обновление Story Bible — после закрытия стрима, не блокирует ответ
           if (chapterId && chapterSaved) {
@@ -361,7 +421,11 @@ export async function POST(req: Request) {
           }
 
         } catch (err: any) {
-          console.error('STREAM ERROR:', err);
+          log('stream_error', {
+            chapterSaved,
+            msg: err?.message,
+            stack: (err?.stack || '').slice(0, 200),
+          });
           if (!chapterSaved) await refundChapter(userId);
           await logGenError(
             userId,
@@ -369,7 +433,16 @@ export async function POST(req: Request) {
             err?.message?.toLowerCase().includes('timeout') ? 'timeout' : 'stream_error',
             err?.message ?? String(err)
           );
-          controller.error(err);
+          // Сообщаем клиенту явный JSON, иначе ReadableStream закроется без типа
+          // и фронт зависает в "thinking…".
+          try {
+            controller.enqueue(encoder.encode(
+              JSON.stringify({ type: 'stream_error', message: err?.message || 'stream failed' }) + '\n'
+            ));
+            controller.close();
+          } catch {
+            controller.error(err);
+          }
         }
       }
     });
@@ -383,11 +456,11 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('TOP-LEVEL ERROR:', error);
+    log('top_level_error', { msg: error?.message, stack: (error?.stack || '').slice(0, 300) });
     if (consumedUserId) await refundChapter(consumedUserId);
-    await logGenError(null, null, 'ai_error', error?.message ?? String(error));
+    await logGenError(consumedUserId, null, 'ai_error', error?.message ?? String(error));
     return NextResponse.json(
-      { error: 'GENERATION_FAILED', message: error.message },
+      { error: 'GENERATION_FAILED', message: error?.message ?? 'unknown' },
       { status: 500 }
     );
   }

@@ -194,6 +194,11 @@ export default function SceneConstructor({
       const decoder = new TextDecoder();
       if (!reader) throw new Error("No reader available");
 
+      // Server может вернуть ошибку посреди стрима через JSON-line
+      // {type:'db_error'|'ai_error'|'stream_error', message}. Бросаем
+      // в catch как обычное исключение — единая ветка обработки.
+      let serverError: string | null = null;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -219,9 +224,13 @@ export default function SceneConstructor({
               );
               setStatus("success");
             }
+            if (data.type === "db_error" || data.type === "ai_error" || data.type === "stream_error") {
+              serverError = data.message || data.type;
+            }
           } catch {}
         }
       }
+      if (serverError) throw new Error(serverError);
     } catch (err: any) {
       clearStageTimers();
       setGenerationStage("error");
