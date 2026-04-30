@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Политика конфиденциальности",
   description: "Политика конфиденциальности сервиса AniContinue — обработка персональных данных пользователей.",
+  alternates: { canonical: "/legal/privacy" },
 };
 
 export default function PrivacyPage() {

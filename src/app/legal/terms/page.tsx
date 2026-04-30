@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Пользовательское соглашение",
   description: "Пользовательское соглашение сервиса AniContinue — условия использования платформы.",
+  alternates: { canonical: "/legal/terms" },
 };
 
 export default function TermsPage() {

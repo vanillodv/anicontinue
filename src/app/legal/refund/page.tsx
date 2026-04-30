@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "О пожертвованиях — AniContinue",
   description: "Информация о добровольных пожертвованиях в поддержку проекта AniContinue.",
+  alternates: { canonical: "/legal/refund" },
 };
 
 export default function RefundPage() {

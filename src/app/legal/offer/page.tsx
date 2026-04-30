@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Условия добровольной поддержки — AniContinue",
   description: "Условия добровольной поддержки проекта AniContinue.",
+  alternates: { canonical: "/legal/offer" },
 };
 
 export default function OfferPage() {

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Лицензионное соглашение на контент",
   description: "Лицензионное соглашение на использование контента сервиса AniContinue.",
+  alternates: { canonical: "/legal/license" },
 };
 
 export default function LicensePage() {
