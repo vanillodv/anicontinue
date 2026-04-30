@@ -23,14 +23,14 @@ export const metadata: Metadata = {
       "Каталог 240+ аниме от классики Гибли до новинок 2026 года. Выбирай тайтл и пиши свою главу.",
     url: "https://www.anicontinue.ru/catalog",
     type: "website",
-    images: [{ url: "/og-image.svg", width: 1200, height: 630, alt: "Каталог аниме AniContinue" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Каталог аниме AniContinue" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Каталог аниме — 240+ тайтлов",
     description:
       "Каталог 240+ аниме. Выбирай тайтл и пиши свою главу с AI.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
 };
 

@@ -20,14 +20,14 @@ export const metadata: Metadata = {
       "Лента публичных фанфик-глав. Романтика, экшн, альтернативные концовки от других читателей.",
     url: "https://www.anicontinue.ru/community",
     type: "website",
-    images: [{ url: "/og-image.svg", width: 1200, height: 630, alt: "Сообщество AniContinue" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Сообщество AniContinue" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Сообщество — фанфики по аниме от читателей",
     description:
       "Лента публичных фанфик-глав. Романтика, экшн, альтернативные концовки.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
 };
 

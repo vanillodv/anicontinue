@@ -71,19 +71,23 @@
 MAILRU_VERIFICATION=ваш_токен
 ```
 
-## 5. OG-image PNG (TODO ручкой)
+## 5. OG-image PNG ✅ (2026-04-30)
 
-Сейчас `/og-image.svg` — Telegram/VK плохо рендерят SVG-превью при
-шаринге ссылок. Нужен `/og-image.png` 1200×630.
+`/og-image.png` 1200×630 (58 KB) сгенерирован из `og-image.svg` через
+`sharp` (resvg рендерит с системными font-fallback — Times для serif,
+Yu Mincho для кандзи). Используется в `layout.tsx`, `catalog/page.tsx`,
+`community/page.tsx`. SVG-исходник оставлен в `public/og-image.svg` как
+master для будущих правок.
 
-Процесс:
-1. Открыть `public/og-image.svg` в Figma/Inkscape, экспортировать PNG.
-2. Положить в `public/og-image.png`.
-3. В `layout.tsx`, `catalog/page.tsx`, `community/page.tsx` поменять
-   путь `/og-image.svg` → `/og-image.png`.
+Если потребуется обновить:
+```bash
+node -e "require('sharp')(require('fs').readFileSync('public/og-image.svg'),
+  {density:300}).resize(1200,630,{fit:'fill'}).png({compressionLevel:9})
+  .toFile('public/og-image.png').then(console.log)"
+```
 
-Можно отложить — для аниме- и chapter-страниц og-image — постер,
-там SVG не используется.
+Для аниме- и chapter-страниц og-image — постер MAL через `proxyImage()`,
+PNG-замена их не касается.
 
 ## 6. Проверка после деплоя
 

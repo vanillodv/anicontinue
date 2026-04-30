@@ -79,7 +79,7 @@ export const metadata: Metadata = {
       "Допиши то, что канон не додал. AI продолжает любимое аниме за 30 секунд. 3 главы бесплатно, без карты.",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "AniContinue — фанфики нового поколения",
@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     title: "AniContinue — Продолжи своё любимое аниме с AI",
     description:
       "Допиши то, что канон не додал. AI продолжает любимое аниме за 30 секунд.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
