@@ -5,9 +5,13 @@ const SUPABASE_HOST = 'zafbjeslpkprdqaiynqs.supabase.co';
 
 const csp = [
   "default-src 'self'",
-  // Next.js использует inline-скрипты для hydration; 'unsafe-eval' нужен для dev-режима.
+  // 'unsafe-inline' остаётся: Next.js инжектит RSC payload через inline
+  // self.__next_f.push(...) (~30 inline-скриптов на странице). Чистое решение —
+  // nonce-based CSP через proxy.ts, отложено как отдельная задача.
+  // 'unsafe-eval' убран: в проде Next.js + Turbopack runtime его не использует
+  // (проверено grep по prod-чанкам — 0 вызовов eval()/new Function()).
   // mc.yandex.ru — Yandex.Metrica counter (активируется через NEXT_PUBLIC_YANDEX_METRICA_ID).
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru",
+  "script-src 'self' 'unsafe-inline' https://mc.yandex.ru",
   // Inline-стили из JSX style={}, шрифты self-hosted через next/font
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
